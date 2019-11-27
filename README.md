@@ -6,6 +6,46 @@
 
 Helper classes, protocols and functions designed to make more complex encoding/decoding easier.
 
+### Extensions
+
+* **DecoderType**
+    * **decode**<T>(from: data, decodingFunc: (Decoder) throws -> T) -> T
+       * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType
+    
+* **StandardDecoderType**
+    * **decode**<T>(from: data, decodingFunc: (Decoder) throws -> T) -> T
+       * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType (JSONDecoder, PropertyListDecoder, ...)
+         
+* **KeyedDecodingContainerProtocol**
+    * **decode**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> T
+       * Provides custom decoding of an object
+    * **decodeIfPresent**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> T?
+       * Provides custom decoding of an object if present
+    * **decode**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> [T]
+       * Provides custom decoding of an array of objects
+    * **decodeIfPresent**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> [T]?
+       * Provides custom decoding of an array of objects if present
+       
+* **UnkeyedDecodingContainer**
+    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> T
+       * Provides custom decoding of an object
+    * **decodeIfPresent**<T>(decodingFunc: (Decoder) throws -> T) throws -> T?
+       * Provides custom decoding of an object if present
+    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]
+       * Provides custom decoding of an array of objects
+    * **decodeIfPresent**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]?
+       * Provides custom decoding of an array of objects if present
+       
+* **SingleValueDecodingContainer**
+    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> T
+       * Provides custom decoding of an object
+    * **decodeIfPresent**<T>(decodingFunc: (Decoder) throws -> T) throws -> T?
+       * Provides custom decoding of an object if present
+    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]
+       * Provides custom decoding of an array of objects
+    * **decodeIfPresent**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]?
+       * Provides custom decoding of an array of objects if present
+
 ### Helper Containers
 
 #### Bridged
@@ -108,6 +148,7 @@ Catches either the Encoder or Decoder for use outside the normal coding process
 * **CodableSequenceDynamicKeyHelper** - A protocol used on types that implement Sequence that provide the necessary logic to encode into dictionaries based on a specific property name and decode back into an sequence.  This protocol relies on the dynamicElementEncoding and dynamicElementDecoding methods
 * **BaseEncoderTypeBoxing** - A protocol for defining the type boxing methods used by the encoders.  Allows for overriding the value being encoding
 * **BaseDecoderTypeUnboxing** - A protocol for defining the type unboxing methods used by decoders.  Allows for overriding the value being decoded
+
 
 ## Usage
 
