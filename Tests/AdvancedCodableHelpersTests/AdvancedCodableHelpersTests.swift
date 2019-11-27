@@ -5,6 +5,78 @@ import Nillable
 extension String: Error { }
 
 class AdvancedCodableHelpersTests: XCTestCase {
+    
+    class DynObject: Codable, CustomStringConvertible {
+        private enum CodingKeys: String, CodingKey {
+            case type
+            case int
+        }
+        public let intValue: Int
+        
+        public var description: String { return "DynObject(intValue: \(self.intValue))" }
+        
+        public init(intValue: Int) {
+            self.intValue = intValue
+        }
+        public required init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.intValue = try container.decode(Int.self, forKey: .int)
+            
+        }
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(String(describing: type(of: self)), forKey: .type)
+            try container.encode(self.intValue, forKey: .int)
+        }
+        
+        static func dynamicDecoding(from decoder: Decoder) throws -> DynObject {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let encodedType = try container.decode(String.self, forKey: .type)
+            switch encodedType {
+            case "DynObject": return try DynObject(from: decoder)
+            case "SubDynObject": return try SubDynObject(from: decoder)
+            default:
+                fatalError("Unable to decode type '\(encodedType)'")
+            }
+        }
+        
+        static func dynamicArrayDecoding(from decoder: Decoder) throws -> [DynObject] {
+            var container = try decoder.unkeyedContainer()
+            var rtn: [DynObject] = []
+            while !container.isAtEnd {
+                
+                //let obj = try decodingFunc(WrappedUnkeyedSingleValueDecoder(container))
+                let obj = try dynamicDecoding(from: try container.superDecoder())
+                rtn.append(obj)
+            }
+            return rtn
+        }
+        
+    }
+    class SubDynObject: DynObject {
+        private enum CodingKeys: String, CodingKey {
+            case string
+        }
+        public let stringValue: String
+        public override var description: String {
+            return "SubDynObject(intValue: \(self.intValue), stringValue: \"\(self.stringValue)\")"
+        }
+        public init(intValue: Int, stringValue: String) {
+            self.stringValue = stringValue
+            super.init(intValue: intValue)
+        }
+        public required init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.stringValue = try container.decode(String.self, forKey: .string)
+            try super.init(from: decoder)
+        }
+        override func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.stringValue, forKey: .string)
+            try super.encode(to: encoder)
+        }
+    }
+    
     struct Name {
         let firstName: String
         let lastName: String
@@ -284,12 +356,104 @@ class AdvancedCodableHelpersTests: XCTestCase {
          }*/
         
     }
+    
+    func testDynamicDecoding() {
+        
+        struct ObjectContainer<Object>: Codable where Object: Codable {
+            private enum CodingKeys: String, CodingKey {
+                case object
+            }
+            let object: Object
+            public init(_ object: Object) { self.object = object}
+            init(from decoder: Decoder) throws {
+                var container = try decoder.container(keyedBy: CodingKeys.self)
+                if Object.self == Array<DynObject>.self {
+                    let ary: [DynObject] = try container.decode(forKey: .object,
+                                                                decodingFunc: DynObject.dynamicArrayDecoding)
+                    self.object = ary as! Object
+                } else if Object.self == DynObject.self {
+                    let obj: DynObject = try container.decode(forKey: .object,
+                                                              decodingFunc: DynObject.dynamicDecoding)
+                    self.object = obj as! Object
+                } else {
+                    self.object = try container.decode(Object.self, forKey: .object)
+                }
+            }
+        }
+        
+        do {
+            let origionalObject = SubDynObject(intValue: 10, stringValue: "Two")
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            let encodedData = try encoder.encode(origionalObject)
+            
+            #if verbose
+            let encodedStr = String(data: encodedData, encoding: .utf8)!
+            print(encodedStr)
+            #endif
+            
+            let decoder = JSONDecoder()
+            let decodedObj = try decoder.decode(from: encodedData, decodingFunc: DynObject.dynamicDecoding)
+            XCTAssert(type(of: decodedObj) == type(of: origionalObject))
+            XCTAssert(decodedObj == origionalObject)
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        do {
+            let origionalObject = ObjectContainer<DynObject>(SubDynObject(intValue: 10, stringValue: "Two"))
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            let encodedData = try encoder.encode(origionalObject)
+            
+            #if verbose
+            let encodedStr = String(data: encodedData, encoding: .utf8)!
+            print(encodedStr)
+            #endif
+            
+            let decoder = JSONDecoder()
+            let decodedObj = try decoder.decode(ObjectContainer<DynObject>.self, from: encodedData)
+            XCTAssert(type(of: decodedObj) == type(of: origionalObject))
+            XCTAssert(decodedObj.object == origionalObject.object)
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        do {
+            let objects: [DynObject] = [SubDynObject(intValue: 10, stringValue: "Two"),
+                                        DynObject(intValue: 1)]
+            let origionalObject = ObjectContainer<[DynObject]>(objects)
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            let encodedData = try encoder.encode(origionalObject)
+            
+            #if verbose
+            let encodedStr = String(data: encodedData, encoding: .utf8)!
+            print(encodedStr)
+            #endif
+            
+            let decoder = JSONDecoder()
+            let decodedObj = try decoder.decode(ObjectContainer<[DynObject]>.self, from: encodedData)
+            print(decodedObj)
+            XCTAssert(decodedObj.object == origionalObject.object)
+            //XCTAssert(type(of: decodedObj) == type(of: origionalObject))
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+    }
 
 
     static var allTests = [
         ("testCodingCustomSequence", testCodingCustomSequence),
         ("testCodingArray", testCodingArray),
         ("testSwiftDictionaryCoding", testSwiftDictionaryCoding),
+        ("testDynamicDecoding", testDynamicDecoding)
     ]
 }
 
@@ -317,32 +481,56 @@ extension AdvancedCodableHelpersTests.Name: Codable {
 }
 
 extension AdvancedCodableHelpersTests.Name: Comparable {
-    public static func == (lhs: AdvancedCodableHelpersTests.Name, rhs: AdvancedCodableHelpersTests.Name) -> Bool {
+    public static func == (lhs: AdvancedCodableHelpersTests.Name,
+                           rhs: AdvancedCodableHelpersTests.Name) -> Bool {
         return ((lhs.firstName == rhs.firstName) && (lhs.lastName == rhs.lastName))
     }
-    public static func < (lhs: AdvancedCodableHelpersTests.Name, rhs: AdvancedCodableHelpersTests.Name) -> Bool {
+    public static func < (lhs: AdvancedCodableHelpersTests.Name,
+                          rhs: AdvancedCodableHelpersTests.Name) -> Bool {
         return (lhs.firstName + " " + lhs.lastName) < (rhs.firstName + " " + rhs.lastName)
     }
 }
 
 extension AdvancedCodableHelpersTests.SubPersonObject: Equatable {
-    public static func == (lhs: AdvancedCodableHelpersTests.SubPersonObject, rhs: AdvancedCodableHelpersTests.SubPersonObject) -> Bool {
+    public static func == (lhs: AdvancedCodableHelpersTests.SubPersonObject,
+                           rhs: AdvancedCodableHelpersTests.SubPersonObject) -> Bool {
         return ((lhs.valA == rhs.valA) && (lhs.valB == rhs.valB) && (lhs.valC == rhs.valC))
     }
 }
 
 extension AdvancedCodableHelpersTests.Person: Comparable {
-    public static func == (lhs: AdvancedCodableHelpersTests.Person, rhs: AdvancedCodableHelpersTests.Person) -> Bool {
+    public static func == (lhs: AdvancedCodableHelpersTests.Person,
+                           rhs: AdvancedCodableHelpersTests.Person) -> Bool {
         return ((lhs.age == rhs.age) && (lhs.gender == rhs.gender) && (lhs.name == rhs.name) && (lhs.subItems == rhs.subItems))
     }
-    public static func < (lhs: AdvancedCodableHelpersTests.Person, rhs: AdvancedCodableHelpersTests.Person) -> Bool {
+    public static func < (lhs: AdvancedCodableHelpersTests.Person,
+                          rhs: AdvancedCodableHelpersTests.Person) -> Bool {
         return (lhs.name < rhs.name)
     }
 }
 
 extension AdvancedCodableHelpersTests.CodableSequenceArray: Equatable {
-    public static func == (lhs: AdvancedCodableHelpersTests.CodableSequenceArray, rhs: AdvancedCodableHelpersTests.CodableSequenceArray) -> Bool {
+    public static func == (lhs: AdvancedCodableHelpersTests.CodableSequenceArray,
+                           rhs: AdvancedCodableHelpersTests.CodableSequenceArray) -> Bool {
         return lhs.ary == rhs.ary
+    }
+}
+
+extension AdvancedCodableHelpersTests.DynObject: Equatable {
+    static func == (lhs: AdvancedCodableHelpersTests.DynObject,
+                    rhs: AdvancedCodableHelpersTests.DynObject) -> Bool {
+        guard type(of: lhs) == type(of: rhs) else { return false}
+        return lhs.intValue == rhs.intValue
+        
+    }
+}
+
+extension AdvancedCodableHelpersTests.SubDynObject {
+    static func == (lhs: AdvancedCodableHelpersTests.SubDynObject,
+                    rhs: AdvancedCodableHelpersTests.SubDynObject) -> Bool {
+        guard type(of: lhs) == type(of: rhs) else { return false}
+        return (lhs.intValue == rhs.intValue && lhs.stringValue == rhs.stringValue)
+        
     }
 }
 
