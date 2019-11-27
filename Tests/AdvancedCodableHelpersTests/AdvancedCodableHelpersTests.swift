@@ -366,7 +366,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             let object: Object
             public init(_ object: Object) { self.object = object}
             init(from decoder: Decoder) throws {
-                var container = try decoder.container(keyedBy: CodingKeys.self)
+                let container = try decoder.container(keyedBy: CodingKeys.self)
                 if Object.self == Array<DynObject>.self {
                     let ary: [DynObject] = try container.decode(forKey: .object,
                                                                 decodingFunc: DynObject.dynamicArrayDecoding)
@@ -439,7 +439,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             let decodedObj = try decoder.decode(ObjectContainer<[DynObject]>.self, from: encodedData)
-            print(decodedObj)
+            //print(decodedObj)
             XCTAssert(decodedObj.object == origionalObject.object)
             //XCTAssert(type(of: decodedObj) == type(of: origionalObject))
         } catch {
