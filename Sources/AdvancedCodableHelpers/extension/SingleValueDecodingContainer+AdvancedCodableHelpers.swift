@@ -12,7 +12,7 @@ public extension SingleValueDecodingContainer {
     /// - Parameters:
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    mutating func decode<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> T {
+    func decode<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> T {
         let wrappedDecoder = try self.decode(DecoderCatcher.self)
         return try decodingFunc(wrappedDecoder.decoder)
     }
@@ -20,7 +20,7 @@ public extension SingleValueDecodingContainer {
     /// - Parameters:
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    mutating func decodeIfPresent<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> T? {
+    func decodeIfPresent<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> T? {
         guard !self.decodeNil() else { return nil }
         return try decode(decodingFunc: decodingFunc)
     }
