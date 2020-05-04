@@ -53,7 +53,6 @@ public class BridgedKeyedEncodingContainer<FromKey, ToKey>: KeyedEncodingContain
     private func convertKey(_ from: Key) throws -> FromKey {
         guard let rtn = FromKey(stringValue: from.stringValue) else {
             throw BridgedEncodingError.keyNotFound(from, EncodingError.Context.init(codingPath: self.codingPath, debugDescription: "Could not convert key '\(from.stringValue)' of type \(type(of: from)) to type \(FromKey.self)"))
-            //fatalError("Invalid Key")
         }
         return rtn
     }
