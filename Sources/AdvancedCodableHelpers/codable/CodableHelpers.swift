@@ -366,7 +366,10 @@ public struct CodableHelpers {
     /// A collection of helper methods for working with Sequence's
     public struct sequences {
         
-        
+        public enum Errors: Error {
+            /// Error occurs when real conatiner has not be set before the end of the dynamicElementEncoding call
+            case realContainerNotSet
+        }
         /// Provides an easy way of encoding an array of objects like a dictionary using one of the object properties as the key.
         ///
         /// Note: Array order is not guarenteed.  This is dependant on how the the EncodingType handles Dictionaries
@@ -445,7 +448,8 @@ public struct CodableHelpers {
                 
                 try element.encode(to: subEncoder)
                 guard dContainer.wasContainerSet else {
-                    fatalError("Real container was not set")
+                    //fatalError("Real container was not set")
+                    throw Errors.realContainerNotSet
                 }
                 
                 
