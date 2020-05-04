@@ -214,14 +214,16 @@ public class InjectedKeyedDecodingContainer<K>: KeyedDecodingContainerProtocol w
         return InjectedUnkeyedDecodingContainer(self.codingPath.appending(key), object: aV)
     }
     
-    public func superDecoder() throws -> Decoder {
-        //return try self.container.superDecoder()
+    private func _superDecoder(forKey key: CodingKey) throws -> Decoder {
         fatalError("Unsupported Method")
     }
     
+    public func superDecoder() throws -> Decoder {
+        return try _superDecoder(forKey: CodableKey.super)
+    }
+    
     public func superDecoder(forKey key: K) throws -> Decoder {
-        //return try self.container.superDecoder(forKey: key)
-        fatalError("Unsupported Method")
+        return try _superDecoder(forKey: key)
     }
     
     

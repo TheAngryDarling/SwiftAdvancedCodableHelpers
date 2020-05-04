@@ -174,11 +174,17 @@ public class InjectedUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     }
     
     public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        //guard let v = objects[self.currentIndex] as? [String: Any] else {
-        //    throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: self.objects[self.currentIndex])
-        //}
+        guard let v = objects[self.currentIndex] as? [String: Any] else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: self.objects[self.currentIndex])
+        }
         
-        fatalError("Unsupported call.  Only decoding of basic types is supported here")
+        var newPath: [CodingKey] = []
+        newPath.append(contentsOf: self.codingPath)
+        newPath.append(CodableKey(index: self.currentIndex))
+        
+        self.currentIndex += 1
+        
+        return InjectedKeyedDecodingContainer<NestedKey>(newPath, injections: v).toKeyedContainer()
     }
     
     public func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
@@ -193,11 +199,23 @@ public class InjectedUnkeyedDecodingContainer: UnkeyedDecodingContainer {
         
         return InjectedUnkeyedDecodingContainer(newPath, objects: v)
         
-        //fatalError("Unsupported call.  Only decoding of basic types is supported here")
     }
     
     public func superDecoder() throws -> Decoder {
-        fatalError("Unsupported call.  Only decoding of basic types is supported here")
+        var newPath: [CodingKey] = []
+        newPath.append(contentsOf: self.codingPath)
+        newPath.append(CodableKey(index: self.currentIndex))
+        
+        if let v = objects[self.currentIndex] as? [String: Any] {
+            let container = InjectedKeyedDecodingContainer<CodableKey>(newPath, injections: v)
+            return WrappedKeyedDecoder(container)
+        } else if let v = objects[self.currentIndex] as? [Any] {
+            let container = InjectedUnkeyedDecodingContainer(newPath, objects: v)
+            return WrappedUnkeyedDecoder(container)
+        } else {
+            let container = InjectedSingleValueDecodingContainer(newPath, object: objects[self.currentIndex])
+            return WrappedSingleValueDecoder(container)
+        }
     }
     
     

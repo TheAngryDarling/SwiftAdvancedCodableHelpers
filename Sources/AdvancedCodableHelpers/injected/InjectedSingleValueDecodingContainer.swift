@@ -24,12 +24,6 @@ public class InjectedSingleValueDecodingContainer: SingleValueDecodingContainer 
     }
     
     public func decodeNil() -> Bool {
-        /*guard self.object is NSNull || ((object as? _OptionalProtocol)?.isNil ?? false)  else {
-            return false
-        }*/
-        /*guard ((object as? Nillable)?.isNil ?? false) else {
-            return false
-         }*/
         guard isNil(self.object) else { return false }
         
         return true
@@ -158,11 +152,14 @@ public class InjectedSingleValueDecodingContainer: SingleValueDecodingContainer 
     }
     
     public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        //guard let v = self.object as? [String: Any] else {
-        //    throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: self.object)
-        //}
+        guard let v = self.object as? [String: Any] else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: self.object)
+        }
+        var newPath: [CodingKey] = []
+        newPath.append(contentsOf: self.codingPath)
+        newPath.append(CodableKey(index: self.currentIndex))
         
-        fatalError("Unsupported call.  Only decoding of basic types is supported here")
+        return InjectedKeyedDecodingContainer<NestedKey>(newPath, injections: v).toKeyedContainer()
     }
     
     public func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
@@ -172,16 +169,25 @@ public class InjectedSingleValueDecodingContainer: SingleValueDecodingContainer 
         var newPath: [CodingKey] = []
         newPath.append(contentsOf: self.codingPath)
         newPath.append(CodableKey(index: self.currentIndex))
-        
-        
-        
+
         return InjectedUnkeyedDecodingContainer(newPath, objects: v)
-        
-        //fatalError("Unsupported call.  Only decoding of basic types is supported here")
     }
     
     public func superDecoder() throws -> Decoder {
-        fatalError("Unsupported call.  Only decoding of basic types is supported here")
+        var newPath: [CodingKey] = []
+        newPath.append(contentsOf: self.codingPath)
+        newPath.append(CodableKey(index: self.currentIndex))
+        
+        if let v = self.object as? [String: Any] {
+            let container = InjectedKeyedDecodingContainer<CodableKey>(newPath, injections: v)
+            return WrappedKeyedDecoder(container)
+        } else if let v = self.object as? [Any] {
+            let container = InjectedUnkeyedDecodingContainer(newPath, objects: v)
+            return WrappedUnkeyedDecoder(container)
+        } else {
+            let container = InjectedSingleValueDecodingContainer(newPath, object: self.object)
+            return WrappedSingleValueDecoder(container)
+        }
     }
     
     
