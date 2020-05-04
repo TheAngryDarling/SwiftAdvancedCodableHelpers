@@ -153,9 +153,9 @@ open class WrappedKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol wh
     }
     
     open func superDecoder() throws -> Decoder {
-        return try WrappedCodingErrors.repackage(self.codingPath.appending(stringValue: "super"), disableRepackagingErrors) {
+        return try WrappedCodingErrors.repackage(self.codingPath.appending(CodableKey.super), disableRepackagingErrors) {
             return WrappedDecoder(try self.container.superDecoder(),
-                                  customCodingPath: self.codingPath.appending(stringValue: "super"))
+                                  customCodingPath: self.codingPath.appending(CodableKey.super))
         }
     }
     

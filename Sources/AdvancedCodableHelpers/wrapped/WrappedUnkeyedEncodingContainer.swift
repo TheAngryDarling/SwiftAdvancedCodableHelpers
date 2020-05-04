@@ -155,7 +155,7 @@ open class WrappedUnkeyedEncodingContainer {
     
     open func superEncoder() -> Encoder {
         return WrappedEncoder(self.container.superEncoder(),
-                              customCodingPath: self.codingPath.appending(stringValue: "super"))
+                              customCodingPath: self.codingPath.appending(CodableKey.super))
     }
 }
 
