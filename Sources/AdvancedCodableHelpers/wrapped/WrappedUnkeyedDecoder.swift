@@ -22,8 +22,8 @@ public class WrappedUnkeyedDecoder: Decoder, SingleValueDecodingContainer {
     }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        //return try self.container.nestedContainer(keyedBy: type)
-        fatalError("Unsupported method")
+        return try self.container.nestedContainer(keyedBy: type)
+        // fatalError("Unsupported method")
     }
     
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
