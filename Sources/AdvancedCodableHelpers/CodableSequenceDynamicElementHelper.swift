@@ -33,9 +33,8 @@ extension CodableSequenceDynamicElementHelper where Element: Codable {
     
     /// Helper constructor for decoding dynamic keyed elements
     public init(from decoder: Decoder) throws {
-        let list: [Element] = try CodableHelpers.sequences.dynamicElementDecoding(from: decoder,
-                                                                                  usingKey: Self.ElementKey,
-                                                                                  ofType: Element.self)
+        let list: [Element] = try decoder.dynamicElementDecoding(usingKey: Self.ElementKey,
+                                                                 ofType: Element.self)
         self.init(list)
     }
     
@@ -50,6 +49,6 @@ extension CodableSequenceDynamicElementHelper where Element: Codable {
     
     /// Helper function used to encode dynamically keyed objects
     public func encode(to encoder: Encoder) throws {
-        try CodableHelpers.sequences.dynamicElementEncoding(self, to: encoder, usingKey: Self.ElementKey)
+        try encoder.dynamicElementEncoding(self, usingKey: Self.ElementKey)
     }
 }
