@@ -29,6 +29,8 @@ internal extension DictionaryKeyCodable {
     var dynamicCodingKey: CodableKey {
         if let v = self as? String {
             return CodableKey(stringValue: v)
+        } else if let v = self as? Bool {
+            return CodableKey(stringValue: "\(v)")
         } else if let v = self as? Int {
             return CodableKey(intValue: v)
         } else if let v = self as? Int8 {
@@ -55,6 +57,9 @@ extension String: DictionaryKeyCodable {
     public static var _dictionaryKeyCodableProtoLock: _DictionaryKeyCodableLock { return _DictionaryKeyCodableLock() }
 }
 
+extension Bool: DictionaryKeyCodable, DictionaryKeyCodableStringInit {
+    public static var _dictionaryKeyCodableProtoLock: _DictionaryKeyCodableLock { return _DictionaryKeyCodableLock() }
+}
 extension Int: DictionaryKeyCodable, DictionaryKeyCodableStringInit {
     public static var _dictionaryKeyCodableProtoLock: _DictionaryKeyCodableLock { return _DictionaryKeyCodableLock() }
 }
