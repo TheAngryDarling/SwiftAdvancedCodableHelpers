@@ -24,7 +24,20 @@ public protocol AnyEquatableFromEquatable: AnyEquatable, Equatable { }
 
 public extension AnyEquatableFromEquatable {
     func equals(_ value: Any) -> Bool {
-        guard let eV = value as? Self else { return false }
-        return (self == eV)
+        var rtn: Bool = false
+        
+        if let lhsBool = self as? Bool,
+           let rhsInt = value as? Int {
+            let lhsVal = lhsBool ? 1: 0
+            rtn = (lhsVal == rhsInt)
+        } else if let lhsInt = self as? Int,
+                  let rhsBool = value as? Bool {
+            let rhsVal = rhsBool ? 1: 0
+            rtn = (lhsInt == rhsVal)
+        } else if let rhs = value as? Self {
+            rtn = (self == rhs)
+        }
+        
+        return rtn
     }
 }
