@@ -1,8 +1,10 @@
 import XCTest
 import Nillable
 @testable import AdvancedCodableHelpers
+import BasicCodableHelpers
 
 extension String: Error { }
+
 
 class AdvancedCodableHelpersTests: XCTestCase {
     
@@ -81,10 +83,61 @@ class AdvancedCodableHelpersTests: XCTestCase {
         let firstName: String
         let lastName: String
     }
-    enum Gender: String, Codable {
-        case male = "m"
-        case female = "f"
-        case other = "o"
+    enum Gender: Codable, Equatable {
+        case agender
+        case male
+        case female
+        case bi
+        case trans
+        case cis
+        case fluid
+        case intersex
+        case other(String)
+        
+        static let knownGenders: [Gender] = [
+            .agender,
+            .male,
+            .female,
+            .bi,
+            .trans,
+            .cis,
+            .fluid,
+            .intersex,
+        ]
+        
+        var code: String {
+            switch self {
+            case .agender: return "a"
+            case .male: return "m"
+            case .female: return "f"
+            case .bi: return "b"
+            case .trans: return "t"
+            case .cis: return "c"
+            case .fluid: return "fl"
+            case .intersex: return "i"
+            case .other(let rtn): return rtn
+            }
+        }
+        
+        
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let stringCode = try container.decode(String.self)
+            if let c = Gender.knownGenders.first(where: { $0.code == stringCode }) {
+                self = c
+            } else {
+                self = .other(stringCode)
+            }
+        }
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.code)
+        }
+        
+        public static func ==(lhs: Gender, rhs: Gender) -> Bool {
+            return lhs.code == rhs.code
+        }
     }
     struct SubPersonObject: Codable {
         private enum CodingKeys: CodingKey {
@@ -122,7 +175,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
         }
         
     }
-    struct Person: Codable {
+    struct Person: Codable, AnyEquatableFromEquatable {
         let name: Name
         let age: Int
         let gender: Gender
@@ -153,8 +206,8 @@ class AdvancedCodableHelpersTests: XCTestCase {
     }
     
     func testCodingCustomSequence() {
-        let p1 = Person(name: "Person A", age: 36, gender: .male, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
-        let p2 = Person(name: "Person B", age: 30, gender: .female, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
+        let p1 = Person(name: "Person A", age: 36, gender: .agender, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
+        let p2 = Person(name: "Person B", age: 30, gender: .male, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
         
         var ary: CodableSequenceArray = CodableSequenceArray()
         //var ary: Array<Person> = Array<Person>()
@@ -196,8 +249,8 @@ class AdvancedCodableHelpersTests: XCTestCase {
     }
     
     func testCodingArray() {
-        let p1 = Person(name: "Person A", age: 36, gender: .male, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
-        let p2 = Person(name: "Person B", age: 30, gender: .female, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
+        let p1 = Person(name: "Person A", age: 36, gender: .female, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
+        let p2 = Person(name: "Person B", age: 30, gender: .bi, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
         
         var ary: [Person] = [p1, p2]
         ary.sort()
@@ -447,13 +500,323 @@ class AdvancedCodableHelpersTests: XCTestCase {
         }
         
     }
-
+    
+    func testExtendedCodeSingleOrArray() {
+        let p1 = Person(name: "Person A", age: 36, gender: .trans, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
+        let p2 = Person(name: "Person B", age: 30, gender: .cis, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
+        let testArrays: [[Person]] = [[p1],  [p1, p2]]
+        for (index, array) in testArrays.enumerated() {
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .prettyPrinted
+                let d = try encoder.encodeToSingleOrArray(array)
+                
+                let decoder = JSONDecoder()
+                let decoded = try decoder.decodeFromSingleOrArray(Person.self, from: d)
+                
+                XCTAssertEqual(array, decoded, "[\(index)]: Decoded array does not equal encoded array")
+                
+                
+            } catch {
+                XCTFail("Failed [\(index)]:\n\(error)")
+            }
+        }
+        
+    }
+    
+    func testExtendedCodingCustomSequence() {
+        let p1 = Person(name: "Person A", age: 36, gender: .fluid, subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
+        let p2 = Person(name: "Person B", age: 30, gender: .intersex, subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
+        
+        var ary: CodableSequenceArray = CodableSequenceArray()
+        //var ary: Array<Person> = Array<Person>()
+        ary.append(p1)
+        ary.append(p2)
+        ary.sort()
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        do {
+            let d = try encoder.encode(ary)
+            #if verbose
+            let s = String(data: d, encoding: .utf8)!
+            print(s)
+            #endif
+            
+            let decoder = JSONDecoder()
+            var r = try decoder.decode(CodableSequenceArray.self, from: d)
+            r.sort()
+            #if verbose
+            print(r)
+            #endif
+            
+            if !(ary == r) {
+                #if verbose
+                print("----------------------------")
+                print("----------------------------")
+                print(ary)
+                print("----------------------------")
+                print(r)
+                #endif
+                XCTFail("Arrays do no match")
+            }
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+    }
+    
+    func testExtendedCodingArray() {
+        let p1 = Person(name: "Person A", age: 36, gender: .other("Ze"), subItems: SubPersonObject(valA: true, valB: "Test 1", valC: 1))
+        let p2 = Person(name: "Person B", age: 30, gender: .other("Mx"), subItems: SubPersonObject(valA: false, valB: nil, valC: 2))
+        
+        var ary: [Person] = [p1, p2]
+        ary.sort()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        do {
+            let d = try encoder.dynamicElementEncoding(ary, usingKey: "name")
+            
+            //let d = try encoder.encode(ary)
+            #if verbose
+            let s = String(data: d, encoding: .utf8)!
+            print(s)
+            #endif
+            
+            let decoder = JSONDecoder()
+            
+            var r = try decoder.dynamicElementDecoding(from: d,
+                                                       usingKey: "name",
+                                                       ofType: Person.self)
+            r.sort()
+            #if verbose
+            print(r)
+            #endif
+            
+            if !(ary == r) {
+                #if verbose
+                print("----------------------------")
+                print("----------------------------")
+                print(ary)
+                print("----------------------------")
+                print(r)
+                #endif
+                XCTFail("Arrays do no match")
+            }
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+    }
+    
+    
+    func testExtendedSwiftDictionaryEncodingDecoding() {
+        
+        func testDictionaryCoding<K>(_ originalDictionary:  Dictionary<K, Any>,
+                                     customDecoding: @escaping (Decoder) throws -> Any? = { _ in return nil }) throws -> (equals: Bool, encodedData: Data, decoded: Dictionary<K, Any>)  where K: DictionaryKeyCodable {
+            #if verbose
+            print(originalDictionary)
+            #endif
+            
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            
+            
+            let d = try encoder.encodeDictionary(originalDictionary)  //try encoder.encode(origionalStringDictionary)
+            
+            //#if verbose
+            let s = String(data: d, encoding: .utf8)!
+            print(s)
+            //#endif
+            
+            let decoder = JSONDecoder()
+            
+            let decodedDict: Dictionary<K, Any> = try decoder.decodeDictionary(from: d,
+                                                                               customDecoding: customDecoding)
+            
+            #if verbose
+            print(decodedDict)
+            #endif
+            
+            let rtn = originalDictionary.equals(decodedDict)
+            
+            if !rtn {
+                print("originalDictionary: \n\(originalDictionary)")
+                print("decodedDict: \n\(decodedDict)")
+            }
+            
+            return (equals: rtn, encodedData: d, decoded: decodedDict)
+        }
+        
+        do {
+            
+            var originalDictionary = Dictionary<String, Any>()
+            originalDictionary["Person A"] = "Name A"
+            originalDictionary["Person B"] = "Name B"
+            originalDictionary["Person C"] = ["First Name", "Last Name"]
+            originalDictionary["Person D"] =  Person(name: "Person D",
+                                                     age: 30,
+                                                     gender: .agender,
+                                                     subItems: SubPersonObject(valA: false,
+                                                                               valB: nil,
+                                                                               valC: 2))
+            originalDictionary["Person E"] = 1
+            originalDictionary["Person F"] = AnyNil
+            
+            let eq = try testDictionaryCoding(originalDictionary) { decoder in
+                guard decoder.codingPath.count == 1 &&
+                      decoder.codingPath[0].stringValue == "Person D" else {
+                    return nil
+                }
+                return try Person(from: decoder)
+            }
+            
+            XCTAssert(eq.equals, "\(type(of: originalDictionary)) Dictionaries don't match")
+            
+            
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            let decoder = JSONDecoder()
+            
+            let decodedDict: Dictionary<String, Any> = try decoder.decodeDictionary(from: eq.encodedData,
+                                                                                    excludingKeys: [originalDictionary.keys.first!])
+            XCTAssert(!decodedDict.keys.contains(originalDictionary.keys.first!), "Excluding key '\(originalDictionary.keys.first!)' was found in decoded dictionary")
+            
+            #if verbose
+            print(decodedDict)
+            #endif
+            
+            
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        
+        do {
+            
+            var originalDictionary = Dictionary<Int, Any>()
+            originalDictionary[1] = "Name A"
+            originalDictionary[2] = AnyNil
+            originalDictionary[3] = "Name B"
+            
+            let eq = try testDictionaryCoding(originalDictionary)
+            
+            XCTAssert(eq.equals, "\(type(of: originalDictionary)) Dictionaries don't match")
+            
+            
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+        do {
+         
+            var originalDictionary = Dictionary<Bool, Any>()
+            originalDictionary[true] = "Name A"
+            originalDictionary[false] = AnyNil
+         
+            let eq = try testDictionaryCoding(originalDictionary)
+         
+            XCTAssert(eq.equals, "\(type(of: originalDictionary)) Dictionaries don't match")
+         
+         
+         } catch {
+            XCTFail("\(error)")
+         }
+        
+    }
+    
+    func testExtendedSwiftArrayEncodingDecoding() {
+        func testArrayCoding(_ originalArray:  Array<Any>,
+                             customDecoding: @escaping (Decoder) throws -> Any? = { _ in return nil }) throws -> Bool {
+            #if verbose
+            print(originalArray)
+            #endif
+            
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            
+            
+            let d = try encoder.encodeArray(originalArray)
+            
+            //#if verbose
+            let s = String(data: d, encoding: .utf8)!
+            print(s)
+            //#endif
+            
+            let decoder = JSONDecoder()
+            
+            let decodedArray: Array<Any> = try decoder.decode([Any].self,
+                                                              from: d,
+                                                              customDecoding: customDecoding)
+            
+            #if verbose
+            print(decodedArray)
+            #endif
+            
+            let rtn = originalArray.equals(decodedArray)
+            
+            if !rtn {
+                print("originalArray: \n\(originalArray)")
+                print("decodedArray: \n\(decodedArray)")
+            }
+            
+            return rtn
+        }
+        
+        do {
+         
+            var originalArray = Array<Any>()
+            originalArray.append(true)
+            originalArray.append("Name A")
+            originalArray.append(AnyNil)
+            originalArray.append(1)
+            originalArray.append(Person(name: "Person A",
+                                        age: 36,
+                                        gender: .male,
+                                        subItems: SubPersonObject(valA: true,
+                                                                  valB: "Test 1",
+                                                                  valC: 1)))
+         
+            let eq = try testArrayCoding(originalArray) { decoder in
+                
+                if decoder.codingPath.count == 1 &&
+                      decoder.codingPath[0].stringValue == "Index 0" {
+                    return try Bool(from: decoder)
+                }
+                if decoder.codingPath.count == 1 &&
+                      decoder.codingPath[0].stringValue == "Index 4" {
+                    return try Person(from: decoder)
+                }
+                
+                return nil
+            }
+         
+            XCTAssert(eq, "\(type(of: originalArray)) arrays don't match")
+         
+         
+         } catch {
+            XCTFail("\(error)")
+         }
+    }
 
     static var allTests = [
         ("testCodingCustomSequence", testCodingCustomSequence),
         ("testCodingArray", testCodingArray),
         ("testSwiftDictionaryCoding", testSwiftDictionaryCoding),
-        ("testDynamicDecoding", testDynamicDecoding)
+        ("testDynamicDecoding", testDynamicDecoding),
+        
+        ("testExtendedCodeSingleOrArray", testExtendedCodeSingleOrArray),
+        ("testExtendedCodingCustomSequence", testExtendedCodingCustomSequence),
+        ("testExtendedCodingArray", testExtendedCodingArray),
+        ("testExtendedSwiftDictionaryEncodingDecoding", testExtendedSwiftDictionaryEncodingDecoding),
+        ("testExtendedSwiftArrayEncodingDecoding", testExtendedSwiftArrayEncodingDecoding)
     ]
 }
 
