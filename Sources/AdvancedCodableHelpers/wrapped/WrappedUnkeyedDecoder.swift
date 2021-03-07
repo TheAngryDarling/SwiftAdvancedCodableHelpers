@@ -11,14 +11,37 @@ import Foundation
 ///
 /// Unsupported functions: container
 public class WrappedUnkeyedDecoder: Decoder, SingleValueDecodingContainer {
-    
+    public enum ModifyCodingPath {
+        case none
+        case override([CodingKey])
+        case append([CodingKey])
+        
+        public static func appending(_ codingKeys: CodingKey...) -> ModifyCodingPath {
+            return .append(codingKeys)
+        }
+        
+        public static func overriding(_ codingKeys: CodingKey...) -> ModifyCodingPath {
+            return .override(codingKeys)
+        }
+        
+        public func update(_ container: UnkeyedDecodingContainer) -> [CodingKey] {
+            switch self {
+                case .none: return container.codingPath
+                case .override(let rtn): return rtn
+                case .append(let paths):
+                    var rtn = container.codingPath
+                    rtn.append(contentsOf: paths)
+                    return rtn
+            }
+        }
+    }
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     internal var container: UnkeyedDecodingContainer
     //public var codingPath: [CodingKey] { return self.container.codingPath }
     public let codingPath: [CodingKey]
-    public init(_ container: UnkeyedDecodingContainer) {
+    public init(_ container: UnkeyedDecodingContainer, codingPathModifier: ModifyCodingPath = .none) {
         self.container = container
-        self.codingPath = container.codingPath
+        self.codingPath = codingPathModifier.update(container)
     }
     
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
