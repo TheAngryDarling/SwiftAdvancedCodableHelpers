@@ -16,7 +16,7 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/TheAngryDarling/SwiftNillable.git", from: "1.0.0"),
         .package(url: "https://github.com/TheAngryDarling/SwiftClassCollections.git", from: "1.0.4"),
-        .package(url: "https://github.com/TheAngryDarling/SwiftBasicCodableHelpers.git", from: "1.0.0"),
+        .package(url: "https://github.com/TheAngryDarling/SwiftBasicCodableHelpers.git", from: "1.1.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
