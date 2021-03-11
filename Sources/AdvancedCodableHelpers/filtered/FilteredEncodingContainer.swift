@@ -51,7 +51,7 @@ public class FilteredEncodingContainer {
     ///   - method: Calling method
     ///   - childKey: Calling coding key
     ///   - value: value to encode
-    /// - Returns: Returns an indicator if encoding should actually occur
+    /// - returns: Returns an indicator if the object was encoded or not   
     internal func canEncode(method: String, childKey: CodingKey? = nil, value: Any?) throws -> FilteredEncodedCallResults {
         let r = self.rootContainer ?? self
         
