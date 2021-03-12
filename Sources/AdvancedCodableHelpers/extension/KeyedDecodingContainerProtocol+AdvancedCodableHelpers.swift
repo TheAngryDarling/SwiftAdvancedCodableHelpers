@@ -45,7 +45,7 @@ public extension KeyedDecodingContainerProtocol {
     ///   - key: The coding key to decode
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    func decode<T>(forKey key: Self.Key, decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+    func decodeArray<T>(forKey key: Self.Key, decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
         var container = try self.nestedUnkeyedContainer(forKey: key)
         var rtn: [T] = []
         while !container.isAtEnd {
@@ -57,16 +57,40 @@ public extension KeyedDecodingContainerProtocol {
         return rtn
         
     }
+    
+    /// Dynamically decode an array of a given type
+    /// - Parameters:
+    ///   - key: The coding key to decode
+    ///   - decodingFunc: The decoding function to call providing the decoder
+    ///   - decoder: The decoder used within the custom decoding function
+    @available(*, deprecated, renamed: "decodeArray")
+    func decode<T>(forKey key: Self.Key, decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+        return try self.decodeArray(forKey: key, decodingFunc: decodingFunc)
+    }
+    
     /// Dynamically decode an array of a given type if present
     ///
     /// - Parameters:
     ///   - key: The coding key to decode
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    func decodeIfPresent<T>(forKey key: Self.Key, decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
+    func decodeArrayIfPresent<T>(forKey key: Self.Key, decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
         guard self.contains(key) && !((try? self.decodeNil(forKey: key)) ?? false) else { return nil }
-        return try decode(forKey: key, decodingFunc: decodingFunc)
+        return try decodeArray(forKey: key, decodingFunc: decodingFunc)
     }
+    
+    /// Dynamically decode an array of a given type if present
+    ///
+    /// - Parameters:
+    ///   - key: The coding key to decode
+    ///   - decodingFunc: The decoding function to call providing the decoder
+    ///   - decoder: The decoder used within the custom decoding function
+    @available(*, deprecated, renamed: "decodeArrayIfPresent")
+    func decodeIfPresent<T>(forKey key: Self.Key,
+                            decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
+        return try self.decodeArrayIfPresent(forKey: key, decodingFunc: decodingFunc)
+    }
+    
     /// Dynamically decode an array of a given type if present
     ///
     /// - Parameters:
@@ -74,10 +98,10 @@ public extension KeyedDecodingContainerProtocol {
     ///   - defaultValue: The default value to use if key not found
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    func decodeIfPresent<T>(forKey key: Self.Key,
-                            withDefaulValue defaultValue: @autoclosure () -> [T],
-                            decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
-        return (try self.decodeIfPresent(forKey: key, decodingFunc: decodingFunc)) ?? defaultValue()
+    func decodeArrayIfPresent<T>(forKey key: Self.Key,
+                                 withDefaulValue defaultValue: @autoclosure () -> [T],
+                                 decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+        return (try self.decodeArrayIfPresent(forKey: key, decodingFunc: decodingFunc)) ?? defaultValue()
     }
 }
 
@@ -131,7 +155,7 @@ public extension KeyedDecodingContainerProtocol {
                     rtn[key.intValue!] = try v.decodeToAnyDictionary(customDecoding: customDecoding)
                 } else if var v = try? self.nestedUnkeyedContainer(forKey: key) {
                     //rtn[key.intValue!] = try CodableHelpers.arrays.decode(&v, customDecoding: customDecoding)
-                    rtn[key.intValue!] = try v.decodeToAnyArray(customDecoding: customDecoding)
+                    rtn[key.intValue!] = try v.decodeAnyArray(customDecoding: customDecoding)
                 } else {
                     throw DecodingError.typeMismatch(Any.self,
                                                      DecodingError.Context(codingPath: self.codingPath.appending(key),
@@ -178,7 +202,7 @@ public extension KeyedDecodingContainerProtocol {
                     rtn[key.stringValue] = try v.decodeToAnyDictionary(customDecoding: customDecoding)
                 } else if var v = try? self.nestedUnkeyedContainer(forKey: key) {
                     //rtn[key.stringValue] = try CodableHelpers.arrays.decode(&v, customDecoding: customDecoding)
-                    rtn[key.stringValue] = try v.decodeToAnyArray(customDecoding: customDecoding)
+                    rtn[key.stringValue] = try v.decodeAnyArray(customDecoding: customDecoding)
                 } else {
                     throw DecodingError.typeMismatch(Any.self,
                                                      DecodingError.Context(codingPath: self.codingPath.appending(key),
@@ -247,7 +271,7 @@ public extension KeyedDecodingContainerProtocol {
     ///   - excludingKeys: Any keys to exclude from the top level
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     /// - Returns: Return a dictionary type based on return from the given container
-    func decodeDictionary<D>(forKey key: Key,
+    func decodeAnyDictionary<D>(forKey key: Key,
                              excludingKeys: [D.Key] = [],
                              customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
@@ -268,50 +292,81 @@ public extension KeyedDecodingContainerProtocol {
     ///   - excludingKeys: Any keys to exclude from the top level
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     /// - Returns: Return a dictionary type based on return from the given container
-    func decodeDictionaryIfPresent<D>(forKey key: Key,
+    func decodeAnyDictionaryIfPresent<D>(forKey key: Key,
                                       excludingKeys: [D.Key] = [],
                                       customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D? where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         guard self.containsAndNotNil(key) else { return nil }
-        return try self.decodeDictionary(forKey: key,
+        return try self.decodeAnyDictionary(forKey: key,
                                          excludingKeys: excludingKeys,
                                          customDecoding: customDecoding)
     }
     
-    /// Decodes an Array<Any> from an UnkeyedDecodingContainer
+    /// Decode a Dictionary type based on return from the given container
+    ///
+    /// - Parameters:
+    ///   - key: The coding key to decode
+    ///   - excludingKeys: Any keys to exclude from the top level
+    ///   - defaultValue: The defalut value to use if dictionary is not presetn
+    ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
+    /// - Returns: Return a dictionary type based on return from the given container
+    func decodeAnyDictionaryIfPresent<D>(forKey key: Key,
+                                      excludingKeys: [D.Key] = [],
+                                      withDefaultValue defaultValue: @autoclosure () -> D,
+                                      customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+        return (try self.decodeAnyDictionaryIfPresent(forKey: key,
+                                                   excludingKeys: excludingKeys,
+                                                   customDecoding: customDecoding)) ?? defaultValue()
+    }
+    
+    /// Decodes an Array<Any> from the container
     ///
     /// Decoding sequence tries as follows:
     ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
     ///
     /// - Parameters:
-    ///   - type: The type of value to decode.
     ///   - key: The coding key to decode
     ///   - customDecoding: a method for custom decoding of complex objects
     /// - Returns: Returns an array of decoded objects
-    func decode(_ type: [Any].Type,
-                forKey key: Key,
-                customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
+    func decodeAnyArray(forKey key: Key,
+                          customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
         
         
         var container = try self.nestedUnkeyedContainer(forKey: key)
-        return try container.decodeToAnyArray(customDecoding: customDecoding)
+        return try container.decodeAnyArray(customDecoding: customDecoding)
         
     }
     
-    /// Decodes an Array<Any> from an UnkeyedDecodingContainer
+    /// Decodes an Array<Any> from the container
     ///
     /// Decoding sequence tries as follows:
     ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
     ///
     /// - Parameters:
-    ///   - type: The type of value to decode.
     ///   - key: The coding key to decode
     ///   - customDecoding: a method for custom decoding of complex objects
     /// - Returns: Returns an array of decoded objects
-    func decodeIfPresent(_ type: [Any].Type,
-                         forKey key: Key,
-                         customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>?  {
-        guard self.contains(key) || !((try? self.decodeNil(forKey: key)) ?? false) else { return nil }
-        return try self.decode(type, forKey: key, customDecoding: customDecoding)
+    func decodeAnyArrayIfPresent(forKey key: Key,
+                                   customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>?  {
+        
+        guard self.containsAndNotNil(key) else { return nil }
+        return try self.decodeAnyArray(forKey: key, customDecoding: customDecoding)
+    }
+    
+    /// Decodes an Array<Any> from the container
+    ///
+    /// Decoding sequence tries as follows:
+    ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
+    ///
+    /// - Parameters:
+    ///   - key: The coding key to decode
+    ///   - defaultValue: The default value to use if array is not present
+    ///   - customDecoding: a method for custom decoding of complex objects
+    /// - Returns: Returns an array of decoded objects
+    func decodeAnyArrayIfPresent(forKey key: Key,
+                                   withDefaultValue defaultValue: @autoclosure () -> Array<Any>,
+                                   customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
+        
+        return (try self.decodeAnyArrayIfPresent(forKey: key, customDecoding: customDecoding)) ?? defaultValue()
     }
 }
 
@@ -328,7 +383,7 @@ public extension KeyedDecodingContainerProtocol {
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or nil if no key found
     func decodeFromSingleOrArray<Element>(forKey key: Key,
-                                          customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] where Element: Decodable {
+                                          customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
         
         if let decoder = try? self.superDecoder(forKey: key),
            let v = try? customDecoding(decoder) {
@@ -359,9 +414,26 @@ public extension KeyedDecodingContainerProtocol {
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or nil if no key found
     func decodeFromSingleOrArrayIfPresent<Element>(forKey key: Key,
-                                                   customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]? where Element: Decodable {
+                                                   customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]? {
         guard self.containsAndNotNil(key) else { return nil }
         return try self.decodeFromSingleOrArray(forKey: key, customDecoding: customDecoding)
+    }
+    
+    /// Provides an easy method of decoding an optional/single value/array object into an array, or nil if no decoding options were available
+    ///
+    /// The following rules apply when decoding:
+    /// 1. Tries to decode as a single value object and reutrns as a 1 element array
+    /// 2. Tries to decode as an array of objects and returns it
+    /// 3. returns empty array
+    ///
+    /// - Parameters:
+    ///   - key: Key to decode for
+    ///   - customDecoding: Custom decoding of object type
+    /// - Returns: Returns an array of elements that decoded or nil if no key found
+    func decodeFromSingleOrArrayIfPresent<Element>(forKey key: Key,
+                                                   withDefaultValue defaultValue: @autoclosure () -> [Element],
+                                                   customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
+        return (try self.decodeFromSingleOrArrayIfPresent(forKey: key, customDecoding: customDecoding)) ?? defaultValue()
     }
     
     /// Provides an easy method of decoding an optional/single value/array object into an array, or an empty array if no decoding options were available
@@ -376,9 +448,10 @@ public extension KeyedDecodingContainerProtocol {
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or an empty array if no key found
     func decodeFromSingleOrArrayIfPresentWithEmptyDefault<Element>(forKey key: Key,
-                                                                   customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] where Element: Decodable {
+                                                                   customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
         
-        let rtn: [Element]? = try decodeFromSingleOrArrayIfPresent(forKey: key, customDecoding: customDecoding)
-        return (rtn ?? [])
+        return try self.decodeFromSingleOrArrayIfPresent(forKey: key,
+                                                         withDefaultValue: [],
+                                                         customDecoding: customDecoding)
     }
 }

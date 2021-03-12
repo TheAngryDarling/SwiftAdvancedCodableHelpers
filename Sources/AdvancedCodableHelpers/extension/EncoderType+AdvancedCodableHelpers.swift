@@ -34,13 +34,13 @@ public extension EncoderType where Self: SupportedDictionaryRootEncoderType {
     /// - Parameters:
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
     ///   - encoder: The encoder to encode the dictionary to
-    func encodeDictionary<D>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+    func encodeAnyDictionary<D>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
         /*let encoderHelper = KeyedEncoderHelper(keyType: CodableKey.self) { container in
             try container._encodeDictionary(dictionary)
         }*/
         let encoderHelper = KeyedEncodingContainerCatcher(keyType: CodableKey.self) { container in
-            try container._encodeDictionary(dictionary)
+            try container._encodeAnyDictionary(dictionary)
         }
         
         return try self.encode(encoderHelper)
@@ -78,17 +78,17 @@ public extension EncoderType where Self: SupportedDictionaryRootEncoderType {
 }
 
 public extension EncoderType where Self: SupportedArrayRootEncoderType {
-    /// Encode a dictionary to a container
+    /// Encodes a Sequence of Any objects if supported from the root
     ///
     /// - Parameters:
-    ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
-    ///   - encoder: The encoder to encode the dictionary to
-    func encodeArray<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any {
+    ///   - array: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
+    ///   - encoder: The encoder to encode the sequence to
+    func encodeAnyArray<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any {
         /*let encoderHelper = UnkeyedEncoderHelper() { container in
             try container._encodeArray(array)
         }*/
         let encoderHelper = UnkeyedEncodingContainerCatcher() { container in
-            try container._encodeArray(array)
+            try container._encodeAnyArray(array)
         }
         return try self.encode(encoderHelper)
     }
@@ -100,13 +100,13 @@ public extension StandardEncoderType where Self: SupportedDictionaryRootEncoderT
     /// - Parameters:
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
     ///   - encoder: The encoder to encode the dictionary to
-    func stdEncodeDictionary<D>(_ dictionary: D) throws -> Data where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+    func stdEncodeAnyDictionary<D>(_ dictionary: D) throws -> Data where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
         /*let encoderHelper = KeyedEncoderHelper(keyType: CodableKey.self) { container in
             try container._encodeDictionary(dictionary)
         }*/
         let encoderHelper = KeyedEncodingContainerCatcher(keyType: CodableKey.self) { container in
-            try container._encodeDictionary(dictionary)
+            try container._encodeAnyDictionary(dictionary)
         }
         
         return try self.encode(encoderHelper)
@@ -144,17 +144,17 @@ public extension StandardEncoderType where Self: SupportedDictionaryRootEncoderT
 }
 
 public extension StandardEncoderType where Self: SupportedArrayRootEncoderType {
-    /// Encode a dictionary to a container
+    /// Encodes a Sequence of Any objects if supported from the root
     ///
     /// - Parameters:
-    ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
-    ///   - encoder: The encoder to encode the dictionary to
-    func stdEncodeArray<S>(_ array: S) throws -> Data where S: Sequence, S.Element == Any {
+    ///   - array: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
+    ///   - encoder: The encoder to encode the sequence to
+    func stdEncodeAnyArray<S>(_ array: S) throws -> Data where S: Sequence, S.Element == Any {
         /*let encoderHelper = UnkeyedEncoderHelper() { container in
             try container._encodeArray(array)
         }*/
         let encoderHelper = UnkeyedEncodingContainerCatcher() { container in
-            try container._encodeArray(array)
+            try container._encodeAnyArray(array)
         }
         return try self.encode(encoderHelper)
     }

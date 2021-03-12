@@ -19,10 +19,10 @@ internal struct ContainedCodableArray<S>: Codable where S: SArray, S.Element == 
         if let f = decoder.userInfo[.customDecoding],
            let customDecoding = f as? ((_ decoder: Decoder) throws -> Any?) {
             //a = try CodableHelpers.arrays.decode(from: decoder, customDecoding: customDecoding)
-            a = try container.decodeArray(customDecoding: customDecoding)
+            a = try container.decodeAnyArray(customDecoding: customDecoding)
         } else {
             //a = try CodableHelpers.arrays.decode(from: decoder)
-            a = try container.decodeArray()
+            a = try container.decodeAnyArray()
         }
         if S.self == Array<Any>.self { self.array = a as! S }
         else { self.array = S(a) }

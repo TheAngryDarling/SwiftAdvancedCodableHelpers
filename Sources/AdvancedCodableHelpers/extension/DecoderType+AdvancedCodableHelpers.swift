@@ -75,7 +75,7 @@ public extension DecoderType where Self: SupportedDictionaryRootDecoderType {
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     ///
     /// - Returns: Return a dictionary type based on return
-    func decodeDictionary<D>(from data: EncodedData,
+    func decodeAnyDictionary<D>(from data: EncodedData,
                              excludingKeys: [D.Key] = [],
                              customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
@@ -99,13 +99,11 @@ public extension DecoderType where Self: SupportedArrayRootDecoderType {
     ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
     ///
     /// - Parameters:
-    ///   - type: The type of value to decode.
     ///   - data: The data to decode from
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     /// - Returns: Returns an array of decoded objects
-    func decode(_ type: [Any].Type,
-                from data: EncodedData,
-                customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any] {
+    func decodeAnyArray(from data: EncodedData,
+                        customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any] {
 
         self.userInfo[.customDecoding] = customDecoding
         defer { self.userInfo.removeValue(forKey: .customDecoding) }
@@ -133,16 +131,16 @@ public extension DecoderType where Self: SupportedArrayRootDecoderType {
     ///     let objects = try dynamicElementDecoding(decoder: decoder, withData: data, usingKey: "id", ofType: EncodingElement.self)
     ///
     /// - Parameters:
+    ///   - type: The decodable type to decode to
     ///   - data: The data to decode from
     ///   - elementKey: The coding key
-    ///   - ofType: The decodable type to decode to
     /// - Returns: Returns an array of decoded objects
-    func dynamicElementDecoding<Element>(from data: EncodedData,
-                                         usingKey elementKey: String,
-                                         ofType: Element.Type) throws -> Array<Element> where Element: Decodable {
+    func dynamicElementDecoding<Element>(_ type: Element.Type,
+                                         from data: EncodedData,
+                                         usingKey elementKey: String) throws -> Array<Element> where Element: Decodable {
         let decoderCatcher = try self.decode(DecoderCatcher.self, from: data)
-        return try decoderCatcher.decoder.dynamicElementDecoding(usingKey: elementKey,
-                                                                 ofType: ofType)
+        return try decoderCatcher.decoder.dynamicElementDecoding(Element.self,
+                                                                 usingKey: elementKey)
     }
 }
 
@@ -157,7 +155,7 @@ public extension StandardDecoderType where Self: SupportedDictionaryRootDecoderT
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     ///
     /// - Returns: Return a dictionary type based on return
-    func stdDecodeDictionary<D>(from data: Data,
+    func stdDecodeAnyDictionary<D>(from data: Data,
                              excludingKeys: [D.Key] = [],
                              customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
@@ -181,13 +179,11 @@ public extension StandardDecoderType where Self: SupportedArrayRootDecoderType {
     ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
     ///
     /// - Parameters:
-    ///   - type: The type of value to decode.
     ///   - data: The data to decode from
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     /// - Returns: Returns an array of decoded objects
-    func stdDecode(_ type: [Any].Type,
-                from data: Data,
-                customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any] {
+    func stdDecodeAnyArray(from data: Data,
+                           customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any] {
 
         self.userInfo[.customDecoding] = customDecoding
         defer { self.userInfo.removeValue(forKey: .customDecoding) }
@@ -215,17 +211,15 @@ public extension StandardDecoderType where Self: SupportedArrayRootDecoderType {
     ///     let objects = try dynamicElementDecoding(decoder: decoder, withData: data, usingKey: "id", ofType: EncodingElement.self)
     ///
     /// - Parameters:
+    ///   - type: The decodable type to decode to
     ///   - data: The data to decode from
     ///   - elementKey: The coding key
-    ///   - ofType: The decodable type to decode to
     /// - Returns: Returns an array of decoded objects
-    func stdDynamicElementDecoding<Element>(from data: Data,
-                                         usingKey elementKey: String,
-                                         ofType: Element.Type) throws -> Array<Element> where Element: Decodable {
-        let decoderCatcher = try self.decode(DecoderCatcher.self, from: data)
-        return try decoderCatcher.decoder.dynamicElementDecoding(usingKey: elementKey,
-                                                                 ofType: ofType)
-        
-        
+    func stdDynamicElementDecoding<Element>(_ type: Element.Type,
+                                            from data: Data,
+                                            usingKey elementKey: String) throws -> Array<Element> where Element: Decodable {
+           let decoderCatcher = try self.decode(DecoderCatcher.self, from: data)
+           return try decoderCatcher.decoder.dynamicElementDecoding(Element.self,
+                                                                    usingKey: elementKey)
     }
 }

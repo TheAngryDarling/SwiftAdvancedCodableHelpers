@@ -18,7 +18,7 @@ public extension Decoder {
     /// - Parameters:
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded
-    func decodeFromSingleOrArray<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] where Element: Decodable {
+    func decodeFromSingleOrArray<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
         
         
         if let singleEncoder = try? self.singleValueContainer(),
@@ -103,11 +103,11 @@ public extension Decoder {
     ///     let objects = try dynamicElementDecoding(from: decoder, usingKey: "id", ofType: EncodingElement.self)
     ///
     /// - Parameters:
+    ///   - type: The decodable type to decode to
     ///   - elementKey: The coding key
-    ///   - ofType: The decodable type to decode to
     /// - Returns: Returns an array of decoded objects
-    func dynamicElementDecoding<Element>(usingKey elementKey: String,
-                                         ofType: Element.Type) throws -> Array<Element> where Element: Decodable {
+    func dynamicElementDecoding<Element>(_ type: Element.Type,
+                                         usingKey elementKey: String) throws -> Array<Element> where Element: Decodable {
         return try self.dynamicElementDecoding(usingKey: elementKey,
                                                decodingFunc: Element.init)
     }

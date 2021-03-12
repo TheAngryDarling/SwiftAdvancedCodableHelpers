@@ -34,7 +34,7 @@ internal struct ContainedCodableDictionary<D>: Codable where D: ReEncapsulatable
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodableKey.self)
-        try container._encodeDictionary(self.dictionary)
+        try container._encodeAnyDictionary(self.dictionary)
     }
     
 }

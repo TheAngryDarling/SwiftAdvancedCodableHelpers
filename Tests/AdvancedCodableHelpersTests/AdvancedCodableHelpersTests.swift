@@ -587,9 +587,9 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            var r = try decoder.dynamicElementDecoding(from: d,
-                                                       usingKey: "name",
-                                                       ofType: Person.self)
+            var r = try decoder.dynamicElementDecoding(Person.self,
+                                                       from: d,
+                                                       usingKey: "name")
             r.sort()
             #if verbose
             print(r)
@@ -626,7 +626,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             
             
-            let d = try encoder.encodeDictionary(originalDictionary)  //try encoder.encode(origionalStringDictionary)
+            let d = try encoder.encodeAnyDictionary(originalDictionary)  //try encoder.encode(origionalStringDictionary)
             
             //#if verbose
             let s = String(data: d, encoding: .utf8)!
@@ -635,7 +635,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            let decodedDict: Dictionary<K, Any> = try decoder.decodeDictionary(from: d,
+            let decodedDict: Dictionary<K, Any> = try decoder.decodeAnyDictionary(from: d,
                                                                                customDecoding: customDecoding)
             
             #if verbose
@@ -683,7 +683,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            let decodedDict: Dictionary<String, Any> = try decoder.decodeDictionary(from: eq.encodedData,
+            let decodedDict: Dictionary<String, Any> = try decoder.decodeAnyDictionary(from: eq.encodedData,
                                                                                     excludingKeys: [originalDictionary.keys.first!])
             XCTAssert(!decodedDict.keys.contains(originalDictionary.keys.first!), "Excluding key '\(originalDictionary.keys.first!)' was found in decoded dictionary")
             
@@ -743,7 +743,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             
             
-            let d = try encoder.encodeArray(originalArray)
+            let d = try encoder.encodeAnyArray(originalArray)
             
             //#if verbose
             let s = String(data: d, encoding: .utf8)!
@@ -752,9 +752,8 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            let decodedArray: Array<Any> = try decoder.decode([Any].self,
-                                                              from: d,
-                                                              customDecoding: customDecoding)
+            let decodedArray: Array<Any> = try decoder.decodeAnyArray(from: d,
+                                                                      customDecoding: customDecoding)
             
             #if verbose
             print(decodedArray)

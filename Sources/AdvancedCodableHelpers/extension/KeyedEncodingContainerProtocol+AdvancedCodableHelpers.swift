@@ -16,26 +16,26 @@ internal extension KeyedEncodingContainerProtocol where Key == CodableKey {
     /// - Parameters:
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
     ///   - container: The container to encode to
-    mutating func _encodeDictionary<D>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+    mutating func _encodeAnyDictionary<D>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         for (key, v) in dictionary {
             if let dV = v as? Dictionary<String, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? Dictionary<Bool, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? Dictionary<Int, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? SCDictionary<String, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? SCDictionary<Int, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? SCArrayOrderedDictionary<String, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let dV = v as? SCArrayOrderedDictionary<Int, Any> {
-                try self.encodeDictionary(dV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyDictionary(dV, forKey: key.dynamicCodingKey)
             } else if let aV = v as? Array<Any> {
-                try self._encodeArray(aV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyArray(aV, forKey: key.dynamicCodingKey)
             } else if let aV = v as? SCArray<Any> {
-                try self._encodeArray(aV, forKey: key.dynamicCodingKey)
+                try self.encodeAnyArray(aV, forKey: key.dynamicCodingKey)
             } else if let nV = v as? Nillable, nV.isNil {
                 try self.encodeNil(forKey: key.dynamicCodingKey)
             } else if let eV = v as? Encodable {
@@ -61,10 +61,10 @@ public extension KeyedEncodingContainerProtocol {
     /// - Parameters:
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
     ///   - container: The container to encode to
-    mutating func encodeDictionary<D>(_ dictionary: D,
+    mutating func encodeAnyDictionary<D>(_ dictionary: D,
                                       forKey key: Key) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         var container = self.nestedContainer(keyedBy: CodableKey.self, forKey: key)
-        try container._encodeDictionary(dictionary)
+        try container._encodeAnyDictionary(dictionary)
         
         
     }
@@ -75,11 +75,12 @@ public extension KeyedEncodingContainerProtocol {
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
     ///   - container: The container to encode to
     ///   - key: The key in the container to encode the dictionary to
+    /// - Returns: Returns an indicator if the object was encoded or not
     @discardableResult
-    mutating func encodeDictionaryIfPresent<D>(_ dictionary: D?,
+    mutating func encodeAnyDictionaryIfPresent<D>(_ dictionary: D?,
                                forKey key: Key) throws -> Bool where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         guard let d = dictionary else { return false }
-        try self.encodeDictionary(d, forKey: key)
+        try self.encodeAnyDictionary(d, forKey: key)
         return true
     }
     
@@ -87,7 +88,7 @@ public extension KeyedEncodingContainerProtocol {
 }
 
 public extension KeyedEncodingContainerProtocol {
-    /// Encodes an array of Any to an UnkeyedEncodingContainer if possible
+    /// Encodes an array of Any to the container
     ///
     /// Note: All objects within the array must implement the Encodable protocol
     ///
@@ -95,73 +96,25 @@ public extension KeyedEncodingContainerProtocol {
     ///   - array: The array of objects to encode
     ///   - container: The container to encode the objects to
     /// - Throws: EncodingError.invalidValue if the object can not encoded
-    internal mutating func _encodeArray<S>(_ array: S,
+    mutating func encodeAnyArray<S>(_ array: S,
                             forKey key: Key) throws where S: Sequence, S.Element == Any {
         var container = self.nestedUnkeyedContainer(forKey: key)
-        
-        for (i, v) in array.enumerated() {
-            
-            if let dV = v as? Dictionary<String, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? Dictionary<Bool, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? Dictionary<Int, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCDictionary<String, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCDictionary<Bool, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCDictionary<Int, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCArrayOrderedDictionary<String, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCArrayOrderedDictionary<Bool, Any> {
-                try container.encodeDictionary(dV)
-            } else if let dV = v as? SCArrayOrderedDictionary<Int, Any> {
-                try container.encodeDictionary(dV)
-            } else if let aV = v as? Array<Any> {
-                try container._encodeArray(aV)
-            } else if let aV = v as? SCArray<Any> {
-                try container._encodeArray(aV)
-            } else if let nV = v as? Nillable, nV.isNil {
-                try container.encodeNil()
-            } else if let eV = v as? Encodable {
-                let wrappedEncoder = WrappedSingleValueEncoder(container.superEncoder().singleValueContainer())
-                try eV.encode(to: wrappedEncoder)
-                /*let wrappedEncoder = WrappedUnKeyedEncoder(container)
-                 try eV.encode(to: wrappedEncoder)*/
-            } else {
-                let description = "Expected value to conform to Encodable but found \(type(of: v)) instead."
-                throw EncodingError.invalidValue(v, EncodingError.Context(codingPath: container.codingPath.appending(index: i), debugDescription: description))
-            }
-        }
+        try container._encodeAnyArray(array)
     }
     
-    /// Encodes an array of Any to an UnkeyedEncodingContainer if possible
+    /// Encodes an array of Any to the container if possible
     ///
     /// Note: All objects within the array must implement the Encodable protocol
     ///
     /// - Parameters:
     ///   - array: The array of objects to encode
-    ///   - container: The container to encode the objects to
-    /// - Throws: EncodingError.invalidValue if the object can not encoded
-    mutating func encode<S>(_ array: S,
-                            forKey key: Key) throws where S: Sequence, S.Element == Any {
-        return try self._encodeArray(array, forKey: key)
-    }
-    
-    /// Encodes an array of Any to an UnkeyedEncodingContainer if possible
-    ///
-    /// Note: All objects within the array must implement the Encodable protocol
-    ///
-    /// - Parameters:
-    ///   - array: The array of objects to encode
+    /// - Returns: Returns an indicator if the object was encoded or not   
     /// - Throws: EncodingError.invalidValue if the object can not encoded
     @discardableResult
-    mutating func encodeIfPresent<S>(_ array: S?,
+    mutating func encodeAnyArrayIfPresent<S>(_ array: S?,
                                      forKey key: Key) throws -> Bool where S: Sequence, S.Element == Any {
         guard let a = array else { return false }
-        try self.encode(a, forKey: key)
+        try self.encodeAnyArray(a, forKey: key)
         return true
     }
 }

@@ -35,11 +35,12 @@ public extension UnkeyedDecodingContainer {
                                      decodingFunc: (_ decoder: Decoder) throws -> T) throws -> T {
         return (try self.decodeIfPresent(decodingFunc: decodingFunc)) ?? defaultValue()
     }
+    
     /// Dynamically decode an array of a given type.
     /// - Parameters:
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    mutating func decode<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+    mutating func decodeArray<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
         var container = try self.nestedUnkeyedContainer()
         var rtn: [T] = []
         while !container.isAtEnd {
@@ -54,18 +55,47 @@ public extension UnkeyedDecodingContainer {
     /// - Parameters:
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
-    mutating func decodeIfPresent<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
+    mutating func decodeArrayIfPresent<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
         guard !self.isAtEnd && !((try? self.decodeNil()) ?? false) else { return nil }
-        return try decode(decodingFunc: decodingFunc)
+        return try self.decodeArray(decodingFunc: decodingFunc)
     }
     /// Dynamically decode an array of a given type if present
     /// - Parameters:
     ///   - defaultValue: The default value to use if object not present
     ///   - decodingFunc: The decoding function to call providing the decoder
     ///   - decoder: The decoder used within the custom decoding function
+    mutating func decodeArrayIfPresent<T>(withDefaultValue defaultValue: @autoclosure () -> [T],
+                                     decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+        return (try self.decodeArrayIfPresent(decodingFunc: decodingFunc)) ?? defaultValue()
+    }
+    
+    
+    /// Dynamically decode an array of a given type.
+    /// - Parameters:
+    ///   - decodingFunc: The decoding function to call providing the decoder
+    ///   - decoder: The decoder used within the custom decoding function
+    @available(*, deprecated, renamed: "decodeArray")
+    mutating func decode<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
+        return try self.decodeArray(decodingFunc: decodingFunc)
+    }
+    /// Dynamically decode an array of a given type if present
+    /// - Parameters:
+    ///   - decodingFunc: The decoding function to call providing the decoder
+    ///   - decoder: The decoder used within the custom decoding function
+    @available(*, deprecated, renamed: "decodeIfPresent")
+    mutating func decodeIfPresent<T>(decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T]? {
+        return try self.decodeArrayIfPresent(decodingFunc: decodingFunc)
+    }
+    /// Dynamically decode an array of a given type if present
+    /// - Parameters:
+    ///   - defaultValue: The default value to use if object not present
+    ///   - decodingFunc: The decoding function to call providing the decoder
+    ///   - decoder: The decoder used within the custom decoding function
+    @available(*, deprecated, renamed: "decodeIfPresent")
     mutating func decodeIfPresent<T>(withDefaultValue defaultValue: @autoclosure () -> [T],
                                      decodingFunc: (_ decoder: Decoder) throws -> T) throws -> [T] {
-        return (try self.decodeIfPresent(decodingFunc: decodingFunc)) ?? defaultValue()
+        return try self.decodeArrayIfPresent(withDefaultValue: defaultValue,
+                                             decodingFunc: decodingFunc)
     }
 }
 
@@ -77,7 +107,7 @@ public extension UnkeyedDecodingContainer {
     ///   - excludingKeys: Any keys to exclude from the top level
     ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
     /// - Returns: Return a dictionary type based on return from the given container
-    mutating func decodeDictionary<D>(excludingKeys: [D.Key] = [],
+    mutating func decodeAnyDictionary<D>(excludingKeys: [D.Key] = [],
                                       customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
         
         let container = try self.nestedContainer(keyedBy: CodableKey.self)
@@ -96,7 +126,7 @@ public extension UnkeyedDecodingContainer {
     /// - Parameters:
     ///   - customDecoding: a method for custom decoding of complex objects
     /// - Returns: Returns an array of decoded objects
-    internal mutating func decodeToAnyArray(customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
+    mutating func decodeAnyArray(customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
         var rtn: Array<Any> = Array<Any>()
         while !self.isAtEnd {
             var customValue: Any? = nil
@@ -137,7 +167,7 @@ public extension UnkeyedDecodingContainer {
             } else if let v = try? self.nestedContainer(keyedBy: CodableKey.self) {
                 rtn.append(try v.decodeToAnyDictionary(customDecoding: customDecoding))
             } else if var v = try? self.nestedUnkeyedContainer() {
-                rtn.append(try v.decodeToAnyArray(customDecoding: customDecoding))
+                rtn.append(try v.decodeAnyArray(customDecoding: customDecoding))
             } else {
                 throw DecodingError.typeMismatch(Any.self,
                                                  DecodingError.Context(codingPath: self.codingPath.appending(index: self.currentIndex),
@@ -145,24 +175,6 @@ public extension UnkeyedDecodingContainer {
             }
         }
         return rtn
-    }
-    
-    /// Decodes an Array<Any> from an UnkeyedDecodingContainer
-    ///
-    /// Decoding sequence tries as follows:
-    ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
-    ///
-    /// - Parameters:
-    ///   - type: The type of value to decode. 
-    ///   - customDecoding: a method for custom decoding of complex objects
-    /// - Returns: Returns an array of decoded objects
-    mutating func decodeArray(_ type: [Any].Type,
-                              customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
-        
-        
-        var container = try self.nestedUnkeyedContainer()
-        return try container.decodeToAnyArray(customDecoding: customDecoding)
-        
     }
 }
 
@@ -177,7 +189,7 @@ public extension UnkeyedDecodingContainer {
     /// - Parameters:
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or nil if no key found
-    mutating func decodeFromSingleOrArray<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] where Element: Decodable {
+    mutating func decodeFromSingleOrArray<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
         let decoder = try self.superDecoder()
         //if let v = try? customDecoding(WrappedPreKeyedDecoder(self, preKey: key)) { return [v] }
         if let v = try? customDecoding(decoder) {
@@ -201,15 +213,32 @@ public extension UnkeyedDecodingContainer {
     /// The following rules apply when decoding:
     /// 1. Tries to decode as a single value object and reutrns as a 1 element array
     /// 2. Tries to decode as an array of objects and returns it
-    /// 3. returns empty array
+    /// 3. returns nil
     ///
     /// - Parameters:
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or nil if no key found
-    mutating func decodeFromSingleOrArrayIfPresent<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]? where Element: Decodable {
+    mutating func decodeFromSingleOrArrayIfPresent<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]? {
         guard self.notAtEndAndNotNil() else { return nil }
         
         return try self.decodeFromSingleOrArray(customDecoding: customDecoding)
+        
+    }
+    
+    /// Provides an easy method of decoding an optional/single value/array object into an array, or defaultValue if no decoding options were available
+    ///
+    /// The following rules apply when decoding:
+    /// 1. Tries to decode as a single value object and reutrns as a 1 element array
+    /// 2. Tries to decode as an array of objects and returns it
+    /// 3. returns default value
+    ///
+    /// - Parameters:
+    ///   - defaultValue: The value to return if object not present
+    ///   - customDecoding: Custom decoding of object type
+    /// - Returns: Returns an array of elements that decoded or nil if no key found
+    mutating func decodeFromSingleOrArrayIfPresent<Element>(withDefaultValue defaultValue: @autoclosure () -> [Element],
+                                                            customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
+        return (try self.decodeFromSingleOrArrayIfPresent(customDecoding: customDecoding)) ?? defaultValue()
         
     }
     
@@ -223,9 +252,9 @@ public extension UnkeyedDecodingContainer {
     /// - Parameters:
     ///   - customDecoding: Custom decoding of object type
     /// - Returns: Returns an array of elements that decoded or an empty array if no key found
-    mutating func decodeFromSingleOrArrayIfPresentWithEmptyDefault<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] where Element: Decodable {
+    mutating func decodeFromSingleOrArrayIfPresentWithEmptyDefault<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element] {
         
-        let rtn: [Element]? = try decodeFromSingleOrArrayIfPresent(customDecoding: customDecoding)
-        return (rtn ?? [])
+        return try self.decodeFromSingleOrArrayIfPresent(withDefaultValue: [],
+                                                         customDecoding: customDecoding)
     }
 }
