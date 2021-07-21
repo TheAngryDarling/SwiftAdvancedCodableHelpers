@@ -9,125 +9,125 @@ Helper classes, protocols and functions designed to make more complex encoding/d
 ### Extensions
 
 * **DecoderType**
-    * **decode**<T>(from: data, decodingFunc: (Decoder) throws -> T) -> T
+    * **decode**\<T\>(from: data, decodingFunc: (Decoder) throws -> T) -> T
        * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType
-    * **dtDecode**<T>(from: data, decodingFunc: (Decoder) throws -> T) -> T
+    * **dtDecode**\<T\>(from: data, decodingFunc: (Decoder) throws -> T) -> T
         * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType
-    * **decodeAnyDictionary**<D>(from data: EncodedData, excludingKeys: [D.Key] = [], customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **decodeAnyDictionary**\<D\>(from data: EncodedData, excludingKeys: [D.Key] = [], customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Decode a dictionary with Any as the Value element
     * **decodeAnyArray**(from data: EncodedData, customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any]
         * Decode an array of Any objects
-    * **dynamicElementDecoding**<Element>(_ type: Element.Type, from data: EncodedData, usingKey elementKey: String) throws -> Array<Element> where Element: Decodable
+    * **dynamicElementDecoding**\<Element\>(_ type: Element.Type, from data: EncodedData, usingKey elementKey: String) throws -> Array\<Element\> where Element: Decodable
         * Provides an easy way of decoding dictionaries of objects like an array using the key as one of the object property values.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the DecodingType handles Dictionaries
     
 * **StandardDecoderType**
-    * **decode**<T>(from: Data, decodingFunc: (Decoder) throws -> T) -> T
+    * **decode**\<T\>(from: Data, decodingFunc: (Decoder) throws -> T) -> T
        * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType (JSONDecoder, PropertyListDecoder, ...)
-    * **stdDecode**<T>(from: Data, decodingFunc: (Decoder) throws -> T) -> T
+    * **stdDecode**\<T\>(from: Data, decodingFunc: (Decoder) throws -> T) -> T
         * Provides custom decoding of objects from the root decoding object of any object that implements DecoderType (JSONDecoder, PropertyListDecoder, ...)
-    * **stdDecodeAnyDictionary**<D>(from data: Data, excludingKeys: [D.Key] = [], customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **stdDecodeAnyDictionary**\<D\>(from data: Data, excludingKeys: [D.Key] = [], customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Decode a dictionary with Any as the Value element
     * **stdDecodeAnyArray**(from data: EncodedData, customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> [Any]
         * Decode an array of Any objects
-    * **stdDynamicElementDecoding**<Element>(_ type: Element.Type, from data: EncodedData, usingKey elementKey: String) throws -> Array<Element> where Element: Decodable
+    * **stdDynamicElementDecoding**\<Element\>(_ type: Element.Type, from data: EncodedData, usingKey elementKey: String) throws -> Array\<Element\> where Element: Decodable
         * Provides an easy way of decoding dictionaries of objects like an array using the key as one of the object property values.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the DecodingType handles Dictionaries
   
   * **EncoderType**
-    * **encodeAnyDictionary**<D>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **encodeAnyDictionary**\<D\>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container
-    * **encodeAnyArray**<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
+    * **encodeAnyArray**\<S\>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
         * Encodes a Sequence of Any objects if supported from the root
-    * **dynamicElementEncoding**<S>(_ s: S, usingKey elementKey: String) throws -> EncodedData where S: Sequence, S.Element: Encodable
+    * **dynamicElementEncoding**\<S\>(_ s: S, usingKey elementKey: String) throws -> EncodedData where S: Sequence, S.Element: Encodable
         * Provides an easy way of encoding an array of objects like a dictionary using one of the object properties as the key.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the EncodingType handles Dictionaries
-    * **encodeArray**<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
+    * **encodeArray**\<S\>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
     
   * **StandardEncoderType**
-    * **stdEncodeAnyDictionary**<D>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **stdEncodeAnyDictionary**\<D\>(_ dictionary: D) throws -> EncodedData where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container
-    * **stdEncodeAnyArray**<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
+    * **stdEncodeAnyArray**\<S\>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
         * Encodes a Sequence of Any objects if supported from the root
-    * **dynamicElementEncoding**<S>(_ s: S, usingKey elementKey: String) throws -> EncodedData where S: Sequence, S.Element: Encodable
+    * **dynamicElementEncoding**\<S\>(_ s: S, usingKey elementKey: String) throws -> EncodedData where S: Sequence, S.Element: Encodable
         * Provides an easy way of encoding an array of objects like a dictionary using one of the object properties as the key.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the EncodingType handles Dictionaries
-    * **encodeArray**<S>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
+    * **encodeArray**\<S\>(_ array: S) throws -> EncodedData where S: Sequence, S.Element == Any
     
 * **Decoder**
-    * **decodeFromSingleOrArray**<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
+    * **decodeFromSingleOrArray**\<Element\>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
         * Provides an easy method of decoding an optional/single value/array object into an array
-    * **dynamicElementDecoding**<Element>(usingKey elementKey: String, decodingFunc: (_ decoder: Decoder) throws -> Element) throws -> Array<Element>
+    * **dynamicElementDecoding**\<Element\>(usingKey elementKey: String, decodingFunc: (_ decoder: Decoder) throws -> Element) throws -> Array\<Element\>
         * Provides an easy way of decoding dictionaries of objects like an array using the key as one of the object property values.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the DecodingType handles Dictionaries
 
 * **Encoder**
-    * **encodeToSingleOrArray**<C>(_ collection: C) throws -> SingleOrArrayEncodedAs  where C: Collection, C.Element: Encodable
+    * **encodeToSingleOrArray**\<C\>(_ collection: C) throws -> SingleOrArrayEncodedAs  where C: Collection, C.Element: Encodable
         * Provides an easy method to encode an array of encodable objects in a dynamic way
-    * **dynamicElementEncoding**<S>(_ s: S, usingKey elementKey: String) throws where S: Sequence, S.Element: Encodable
+    * **dynamicElementEncoding**\<S\>(_ s: S, usingKey elementKey: String) throws where S: Sequence, S.Element: Encodable
         * Provides an easy way of encoding an array of objects like a dictionary using one of the object properties as the key.
         * **Note**: Array order is not guarenteed.  This is dependant on how the the EncodingType handles Dictionaries
   
 * **KeyedDecodingContainerProtocol**
-    * **decode**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> T
+    * **decode**\<T\>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> T
        * Provides custom decoding of an object
-    * **decodeArray**<T>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> [T]
+    * **decodeArray**\<T\>(forKey key: Self.Key, decodingFunc: (Decoder) throws -> T) throws -> [T]
        * Provides custom decoding of an array of objects
         * Provides custom decoding of an array of objects if present otherwise returns defaultValue
-    * **decodeAnyDictionary**<D>(forKey key: Key, excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **decodeAnyDictionary**\<D\>(forKey key: Key, excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Decode a Dictionary type based on return from the given container
-    * **decodeAnyArray**(forKey key: Key, customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>
-        * Decodes an Array<Any> from the container
-    * **decodeFromSingleOrArray**<Element>(forKey key: Key, customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
+    * **decodeAnyArray**(forKey key: Key, customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array\<Any\>
+        * Decodes an Array\<Any\> from the container
+    * **decodeFromSingleOrArray**\<Element\>(forKey key: Key, customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
         * Provides an easy method of decoding an optional/single value/array object into an array
      
 * **KeyedEncodingContainerProtocol**
-    * **encodeAnyDictionary**<D>(_ dictionary: D, forKey key: Key) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **encodeAnyDictionary**\<D\>(_ dictionary: D, forKey key: Key) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container where the Value type is Any
-    * **encodeAnyDictionaryIfPresent**<D>(_ dictionary: D?, forKey key: Key) throws -> Bool where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **encodeAnyDictionaryIfPresent**\<D\>(_ dictionary: D?, forKey key: Key) throws -> Bool where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container where the Value type is Any
         * Returns true if encoding occured, otherwise false
-    * **encodeAnyArray**<S>(_ array: S, forKey key: Key) throws where S: Sequence, S.Element == Any
+    * **encodeAnyArray**\<S\>(_ array: S, forKey key: Key) throws where S: Sequence, S.Element == Any
         * Encodes an array of Any to an UnkeyedEncodingContainer if possible
-    * **encodeAnyArrayIfPresent**<S>(_ array: S?, forKey key: Key) throws -> Bool where S: Sequence, S.Element == Any
+    * **encodeAnyArrayIfPresent**\<S\>(_ array: S?, forKey key: Key) throws -> Bool where S: Sequence, S.Element == Any
         * Encodes an array of Any to an UnkeyedEncodingContainer if possible
         * Returns true if encoding occured, otherwise false
        
 * **SingleValueDecodingContainer**
-    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> T
+    * **decode**\<T\>(decodingFunc: (Decoder) throws -> T) throws -> T
        * Provides custom decoding of an object
-    * **decodeArray**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]
+    * **decodeArray**\<T\>(decodingFunc: (Decoder) throws -> T) throws -> [T]
        * Provides custom decoding of an array of objects
-    * **decodeAnyDictionary**<D>(excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **decodeAnyDictionary**\<D\>(excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Decode a Dictionary type based on return from the given container
-    * **decodeAnyArray**(customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>
-        * Decodes an Array<Any> from a Container
-    * **decodeFromSingleOrArray**<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
+    * **decodeAnyArray**(customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array\<Any\>
+        * Decodes an Array\<Any\> from a Container
+    * **decodeFromSingleOrArray**\<Element\>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
         * Provides an easy method of decoding an optional/single value/array object into an array
        
 * **SingleValueEncodingContainer**
-    * **encodeAnyDictionary**<D>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **encodeAnyDictionary**\<D\>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container
-    * **encodeAnyArray**<S>(_ array: S) throws where S: Sequence, S.Element == Any
+    * **encodeAnyArray**\<S\>(_ array: S) throws where S: Sequence, S.Element == Any
         * Encodes an array of Any to the container
         * **Note**: All objects within the array must implement the Encodable protocol
 
 * **UnkeyedDecodingContainer**
-    * **decode**<T>(decodingFunc: (Decoder) throws -> T) throws -> T
+    * **decode**\<T\>(decodingFunc: (Decoder) throws -> T) throws -> T
        * Provides custom decoding of an object
-    * **decodeArray**<T>(decodingFunc: (Decoder) throws -> T) throws -> [T]
+    * **decodeArray**\<T\>(decodingFunc: (Decoder) throws -> T) throws -> [T]
        * Provides custom decoding of an array of objects
-    * **decodeDictionary**<D>(excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **decodeDictionary**\<D\>(excludingKeys: [D.Key] = [], customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Decode a Dictionary type based on return from the given container
-    * **decodeArray**(_ type: [Any].Type, customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>
-        * Decodes an Array<Any> from a Container
-    * **decodeFromSingleOrArray**<Element>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
+    * **decodeArray**(_ type: [Any].Type, customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array\<An\y>
+        * Decodes an Array\<Any\> from a Container
+    * **decodeFromSingleOrArray**\<Element\>(customDecoding: (_ decoder: Decoder) throws -> Element) throws -> [Element]
         * Provides an easy method of decoding an optional/single value/array object into an array
        
 * **UnkeyedEncodingContainer**
-    * **encodeAnyDictionary**<D>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
+    * **encodeAnyDictionary**\<D\>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any
         * Encode a dictionary to a container
-    * **encodeAnyArray**<S>(_ array: S) throws where S: Sequence, S.Element == Any
+    * **encodeAnyArray**\<S\>(_ array: S) throws where S: Sequence, S.Element == Any
         * Encodes an array of Any to the container
 
 ### Helper Containers
