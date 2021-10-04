@@ -14,7 +14,6 @@ public extension SingleValueEncodingContainer {
     /// Provides access to a KeyedDecodingContainer for the given SingleValueDecodingContainer
     mutating fileprivate func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type,
                                                 block: @escaping (inout KeyedEncodingContainer<NestedKey>) throws -> Void) throws {
-        //try self.encode(KeyedEncoderHelper(keyType: keyType, block: block))
         try self.encode(KeyedEncodingContainerCatcher(keyType: keyType, block: block))
     }
     
@@ -45,8 +44,6 @@ public extension SingleValueEncodingContainer {
     ///
     /// - Parameters:
     ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
-    ///   - container: The container to encode to
-    ///   - key: The key in the container to encode the dictionary to
     /// - Returns: Returns a bool indicator if an object was encoded or not
     @discardableResult
     mutating func encodeAnyDictionaryIfPresent<D>(_ dictionary: D?) throws -> Bool where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
