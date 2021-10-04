@@ -18,10 +18,8 @@ internal struct ContainedCodableArray<S>: Codable where S: SArray, S.Element == 
         let container = try decoder.singleValueContainer()
         if let f = decoder.userInfo[.customDecoding],
            let customDecoding = f as? ((_ decoder: Decoder) throws -> Any?) {
-            //a = try CodableHelpers.arrays.decode(from: decoder, customDecoding: customDecoding)
             a = try container.decodeAnyArray(customDecoding: customDecoding)
         } else {
-            //a = try CodableHelpers.arrays.decode(from: decoder)
             a = try container.decodeAnyArray()
         }
         if S.self == Array<Any>.self { self.array = a as! S }
@@ -29,7 +27,6 @@ internal struct ContainedCodableArray<S>: Codable where S: SArray, S.Element == 
     }
     
     public func encode(to encoder: Encoder) throws {
-        //try CodableHelpers.arrays.encode(self.array, to: encoder)
         var container = encoder.singleValueContainer()
         try container.encode(self.array)
     }

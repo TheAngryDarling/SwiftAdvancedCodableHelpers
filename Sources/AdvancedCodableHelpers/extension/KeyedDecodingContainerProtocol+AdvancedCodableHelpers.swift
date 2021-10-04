@@ -154,7 +154,6 @@ public extension KeyedDecodingContainerProtocol {
                     //rtn[key.intValue!] = try _decode(&v, excludingKeys: [], customDecoding: customDecoding)
                     rtn[key.intValue!] = try v.decodeToAnyDictionary(customDecoding: customDecoding)
                 } else if var v = try? self.nestedUnkeyedContainer(forKey: key) {
-                    //rtn[key.intValue!] = try CodableHelpers.arrays.decode(&v, customDecoding: customDecoding)
                     rtn[key.intValue!] = try v.decodeAnyArray(customDecoding: customDecoding)
                 } else {
                     throw DecodingError.typeMismatch(Any.self,
@@ -201,7 +200,6 @@ public extension KeyedDecodingContainerProtocol {
                     //rtn[key.stringValue] = try _decode(&v, excludingKeys: [], customDecoding: customDecoding)
                     rtn[key.stringValue] = try v.decodeToAnyDictionary(customDecoding: customDecoding)
                 } else if var v = try? self.nestedUnkeyedContainer(forKey: key) {
-                    //rtn[key.stringValue] = try CodableHelpers.arrays.decode(&v, customDecoding: customDecoding)
                     rtn[key.stringValue] = try v.decodeAnyArray(customDecoding: customDecoding)
                 } else {
                     throw DecodingError.typeMismatch(Any.self,

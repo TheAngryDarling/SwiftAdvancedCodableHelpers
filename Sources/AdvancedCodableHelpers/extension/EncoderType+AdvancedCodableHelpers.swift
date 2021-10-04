@@ -58,7 +58,7 @@ public extension EncoderType where Self: SupportedDictionaryRootEncoderType {
     ///
     ///     let objects: [EncodingElement] = [...]
     ///
-    ///     try CodableHelpers.sequences.dynamicElementEncoding(objects, to: encoder, usingKey: "id")
+    ///     try encoder.dynamicElementEncoding(objects, usingKey: "id")
     ///
     ///     // This converts the encoded objects to (in JSON)
     ///     {
@@ -124,7 +124,7 @@ public extension StandardEncoderType where Self: SupportedDictionaryRootEncoderT
     ///
     ///     let objects: [EncodingElement] = [...]
     ///
-    ///     try CodableHelpers.sequences.dynamicElementEncoding(objects, to: encoder, usingKey: "id")
+    ///     try encoder.dynamicElementEncoding(objects, usingKey: "id")
     ///
     ///     // This converts the encoded objects to (in JSON)
     ///     {

@@ -291,7 +291,7 @@ public extension Encoder {
     ///
     ///     let objects: [EncodingElement] = [...]
     ///
-    ///     try CodableHelpers.sequences.dynamicElementEncoding(objects, to: encoder, elementKey: "id")
+    ///     try encoder.dynamicElementEncoding(objects, elementKey: "id")
     ///
     ///     // This converts the encoded objects to (in JSON)
     ///     {

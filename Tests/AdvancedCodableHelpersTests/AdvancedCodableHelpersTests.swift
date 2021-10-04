@@ -258,9 +258,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
         encoder.outputFormatting = .prettyPrinted
         
         do {
-            let d = try CodableHelpers.sequences.dynamicElementEncoding(ary,
-                                                                        to: encoder,
-                                                                        usingKey: "name")
+            let d = try encoder.dynamicElementEncoding(ary, usingKey: "name")
             //let d = try encoder.encode(ary)
             #if verbose
             let s = String(data: d, encoding: .utf8)!
@@ -269,11 +267,9 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            //var r = try decoder.decode(CodableSequenceArray.self, from: d)
-            var r = try CodableHelpers.sequences.dynamicElementDecoding(from: decoder,
-                                                                        withData: d,
-                                                                        usingKey: "name",
-                                                                        ofType: Person.self)
+            var r = try decoder.dynamicElementDecoding(Person.self,
+                                                       from: d,
+                                                       usingKey: "name")
             r.sort()
             #if verbose
             print(r)
@@ -308,7 +304,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             
             
-            let d = try CodableHelpers.dictionaries.encode(originalDictionary, to: encoder)  //try encoder.encode(origionalStringDictionary)
+            let d = try encoder.encodeAnyDictionary(originalDictionary)
             
             #if verbose
             let s = String(data: d, encoding: .utf8)!
@@ -317,7 +313,8 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            let decodedDict: Dictionary<K, Any> = try CodableHelpers.dictionaries.decode(d, from: decoder)
+            let decodedDict = try decoder.decodeAnyDictionary(Dictionary<K, Any>.self,
+                                                              from: d)
             
             #if verbose
             print(decodedDict)
@@ -352,7 +349,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             
             
-            let d = try CodableHelpers.dictionaries.encode(originalDictionary, to: encoder)  //try encoder.encode(origionalStringDictionary)
+            let d = try encoder.encodeAnyDictionary(originalDictionary)
             
             #if verbose
             let s = String(data: d, encoding: .utf8)!
@@ -361,9 +358,9 @@ class AdvancedCodableHelpersTests: XCTestCase {
             
             let decoder = JSONDecoder()
             
-            let decodedDict: Dictionary<String, Any> = try CodableHelpers.dictionaries.decode(d,
-                                                                                              from: decoder,
-                                                                                              excludingKeys: [originalDictionary.keys.first!])
+            let decodedDict = try decoder.decodeAnyDictionary(Dictionary<String, Any>.self,
+                                                              from: d,
+                                                              excludingKeys: [originalDictionary.keys.first!])
             XCTAssert(!decodedDict.keys.contains(originalDictionary.keys.first!), "Excluding key '\(originalDictionary.keys.first!)' was found in decoded dictionary")
             
             #if verbose
@@ -447,7 +444,7 @@ class AdvancedCodableHelpersTests: XCTestCase {
             #endif
             
             let decoder = JSONDecoder()
-            let decodedObj = try decoder.decode(from: encodedData, decodingFunc: DynObject.dynamicDecoding)
+            let decodedObj = try decoder.sdtDecode(from: encodedData, decodingFunc: DynObject.dynamicDecoding)
             XCTAssert(type(of: decodedObj) == type(of: origionalObject))
             XCTAssert(decodedObj == origionalObject)
             
