@@ -7,6 +7,7 @@
 
 import Foundation
 import BasicCodableHelpers
+import SwiftClassCollections
 
 /// Simple encoding to capture an encoded value
 fileprivate class _SimpleEncoder: Encoder, SingleValueEncodingContainer {
@@ -358,5 +359,54 @@ public extension Encoder {
                 throw DynamicElementEncodingErrors.realContainerNotSet
             }
         }
+    }
+    
+    /// Encode a dictionary to a encoder
+    ///
+    /// - Parameters:
+    ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
+    func encodeAnyDictionary<D>(_ dictionary: D) throws where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+        var container = self.container(keyedBy: CodableKey.self)
+        try container._encodeAnyDictionary(dictionary)
+    }
+    
+    /// Encode an optional dictionary to a container
+    ///
+    /// - Parameters:
+    ///   - dictionary: Any dictionary type where the Key is DictionaryKeyCodable and Value is Any where can cast to Encodable
+    ///   - container: The container to encode to
+    /// - Returns: Returns a bool indicator if an object was encoded or not
+    @discardableResult
+    func encodeAnyDictionaryIfPresent<D>(_ dictionary: D?) throws -> Bool where D: SDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+        guard let d = dictionary else { return false }
+        try self.encodeAnyDictionary(d)
+        return true
+    }
+    
+    /// Encodes an array of Any to the container
+    ///
+    /// Note: All objects within the array must implement the Encodable protocol
+    ///
+    /// - Parameters:
+    ///   - array: The array of objects to encode
+    /// - Throws: EncodingError.invalidValue if the object can not encoded
+    func encode<S>(_ array: S) throws where S: Sequence, S.Element == Any {
+        var container = self.unkeyedContainer()
+        try container._encodeAnyArray(array)
+    }
+    
+    /// Encodes an array of Any to an UnkeyedEncodingContainer if possible
+    ///
+    /// Note: All objects within the array must implement the Encodable protocol
+    ///
+    /// - Parameters:
+    ///   - array: The array of objects to encode
+    /// - Returns: Returns an indicator if the object was encoded or not
+    /// - Throws: EncodingError.invalidValue if the object can not encoded
+    @discardableResult
+    func encodeIfPresent<S>(_ array: S?) throws -> Bool where S: Sequence, S.Element == Any {
+        guard let a = array else { return false }
+        try self.encode(a)
+        return true
     }
 }

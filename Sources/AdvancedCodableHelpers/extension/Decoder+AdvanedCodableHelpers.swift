@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftClassCollections
 
 public extension Decoder {
     
@@ -110,5 +111,54 @@ public extension Decoder {
                                          usingKey elementKey: String) throws -> Array<Element> where Element: Decodable {
         return try self.dynamicElementDecoding(usingKey: elementKey,
                                                decodingFunc: Element.init)
+    }
+    
+    /// Decode a Dictionary type based on return from the given decoder
+    ///
+    /// Note: Same as dtDecodeDictionary
+    ///
+    /// - Parameters:
+    ///   - excludingKeys: Any keys to exclude from the top level
+    ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
+    ///
+    /// - Returns: Return a dictionary type based on return
+    func decodeAnyDictionary<D>(excludingKeys: [D.Key] = [],
+                             customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+        let container = try self.container(keyedBy: CodableKey.self)
+        return try container.decodeAndRemapDictionary(excludingKeys: excludingKeys.map({ return $0.dynamicCodingKey }),
+                                               customDecoding: customDecoding)
+    }
+    
+    /// Decode a Dictionary type based on return from the given decoder
+    ///
+    /// Note: Same as dtDecodeDictionary
+    ///
+    /// - Parameters:
+    ///   - type: The dictionary type to decode
+    ///   - excludingKeys: Any keys to exclude from the top level
+    ///   - customDecoding: Function to try and do custom decoding of complex objects or nil if no custom decoded required
+    ///
+    /// - Returns: Return a dictionary type based on return
+    func decodeAnyDictionary<D>(_ type: D.Type,
+                                excludingKeys: [D.Key] = [],
+                             customDecoding: @escaping (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> D where D: ReEncapsulatableDictionary, D.Key: DictionaryKeyCodable, D.Value == Any {
+        let rtn: D = try self.decodeAnyDictionary(excludingKeys: excludingKeys,
+                                                  customDecoding: customDecoding)
+        return rtn
+    }
+    
+    /// Decodes an Array<Any> from a SingleValueDecodingContainer
+    ///
+    /// Decoding sequence tries as follows:
+    ///    Int, UInt, Float, String, Double, Bool, Date, Data, Complex Object, Array
+    ///
+    /// - Parameters:
+    ///   - customDecoding: a method for custom decoding of complex objects
+    /// - Returns: Returns an array of decoded objects
+    func decodeAnyArray(customDecoding: (_ decoder: Decoder) throws -> Any? = { _ in return nil }) throws -> Array<Any>  {
+        
+        var container = try self.unkeyedContainer()
+        return try container.decodeAnyArray(customDecoding: customDecoding)
+        
     }
 }
