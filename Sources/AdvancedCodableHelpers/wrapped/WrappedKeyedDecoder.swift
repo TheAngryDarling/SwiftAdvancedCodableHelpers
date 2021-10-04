@@ -62,7 +62,8 @@ public class WrappedKeyedDecoder<K>: Decoder where K: CodingKey {
     }
     
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
-        fatalError("Unsupported method")
+        return WrappedKeyedToSingleValueDecodingContainer(self.container,
+                                                          customCodingPath: self.codingPath)
     }
 }
 
